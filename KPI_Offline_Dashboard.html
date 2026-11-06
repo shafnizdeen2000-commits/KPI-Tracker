@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KPI Tracker — Offline</title>
+<style>
+:root{--teal:#2F5F5C;--teal2:#3f7a76;--lt:#A9C6C1;--bg:#f4f6f5;--card:#fff;--ink:#1d2a29;--mut:#6b7a78;--line:#dde3e2;--in:#E6F2EA;--red:#b23b3b;--green:#2e7d4f;--amber:#b7791f}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","Helvetica Neue",Arial,sans-serif;font-variant-numeric:lining-nums;-webkit-font-smoothing:antialiased;letter-spacing:.005em;background:var(--bg);color:var(--ink)}
+header{background:var(--teal);color:#fff;padding:12px 20px 14px;display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+header h1{font-size:18px;margin:0;letter-spacing:.3px}
+header .spacer{flex:1}
+nav{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;order:3;width:100%}
+nav button{background:#ffffff14;border:1px solid #ffffff26;color:#e3f0ee;padding:9px 6px 8px;border-radius:10px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.15s}
+nav button svg{width:24px;height:24px}
+@media(max-width:760px){nav{grid-template-columns:repeat(4,1fr)}}
+nav button.on{background:#fff;color:var(--teal);border-color:#fff}
+nav button:hover:not(.on){background:#ffffff26;border-color:#ffffff66}
+main{padding:20px;max-width:1400px;margin:0 auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-weight:650;letter-spacing:-.01em;font-size:15px;margin:0 0 12px;color:var(--teal)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid #c9d2d1;border-radius:6px;background:var(--in);color:var(--ink);min-width:0}
+input[type=number]{width:120px}
+textarea{width:100%;min-height:60px}
+button.b{background:var(--teal);color:#fff;border:0;padding:7px 14px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600}
+button.b:hover{background:var(--teal2)}
+button.g{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+button.g:hover{background:#eef5f4}
+button.x{background:none;border:0;color:var(--red);cursor:pointer;font-size:15px;padding:2px 6px}
+button.sm{padding:4px 9px;font-size:12px}
+table{border-collapse:collapse;width:100%}
+th{background:var(--teal);color:#fff;font-weight:600;text-align:left;padding:7px 8px;font-size:12px;white-space:nowrap;vertical-align:bottom;line-height:1.25}
+td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.tot td{background:var(--lt);font-weight:700}
+tbody tr:hover td{background:#f7faf9}
+.tw{overflow:auto;max-height:560px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;border-left:4px solid var(--teal)}
+.kpi .l{font-size:12px;color:var(--mut)}.kpi .v{font-size:22px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--mut)}
+.pc{display:block;font-size:11px;color:var(--mut);font-weight:500}
+tr.tot .pc{color:#24423f}
+.kp{font-size:13px;font-weight:600;color:var(--teal);background:#e6f0ee;padding:1px 6px;border-radius:8px;vertical-align:4px}
+th small{font-weight:400;opacity:.85}
+.sum td{font-size:15px;padding:9px 10px}.sum tr.big td{font-weight:700}.sum tr.tot td{font-size:17px}
+.neg{color:var(--red)}.pos{color:var(--green)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.paid{background:#dff1e6;color:var(--green)}.unpaid{background:#fbe3e3;color:var(--red)}
+.hint{font-size:12px;color:var(--mut);margin:6px 0 0}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal>div{background:#fff;border:1px solid var(--line);border-radius:6px;min-height:62px;padding:4px 6px;font-size:11px}
+.cal .h{background:none;border:0;min-height:0;text-align:center;font-weight:600;color:var(--mut)}
+.cal .o{opacity:.35}.cal .d{font-weight:700}.cal .amt{font-size:12px;color:var(--teal);font-weight:600;margin-top:4px}
+.cal .in{outline:2px solid var(--teal)}
+canvas{width:100%;display:block}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:50}.modal.on{display:flex}
+.mbox{background:#fff;border-radius:12px;padding:18px;width:min(820px,94vw);max-height:92vh;overflow:auto}
+.mbox img{max-width:100%;max-height:65vh;display:block;margin:auto;border:1px solid var(--line)}.mbox iframe{width:100%;height:65vh;border:1px solid var(--line)}
+.ib{background:none;border:0;cursor:pointer;padding:2px;vertical-align:middle;color:#9aa8a6}.ib.has{color:var(--green)}.ib:hover{color:var(--teal)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;font-weight:600;color:var(--teal);transition:.15s}
+.tile svg{display:block;margin:0 auto 8px;width:34px;height:34px}.tile:hover{border-color:var(--teal);box-shadow:0 2px 8px #2f5f5c22}
+.tile.on{background:var(--teal);color:#fff;border-color:var(--teal)}.tile small{display:block;font-weight:400;font-size:11px;opacity:.8;margin-top:2px}
+.sec{margin-top:18px}.sec:first-of-type{margin-top:0}.sec h3{font-size:14px;margin:0 0 8px;color:var(--ink)}
+.ptip{position:fixed;pointer-events:none;background:#1d2a29;color:#fff;padding:7px 10px;border-radius:8px;font-size:11px;font-style:italic;line-height:1.4;box-shadow:0 4px 14px #0003;opacity:0;transition:opacity .12s;z-index:60;white-space:nowrap}
+.ptip.on{opacity:.8}.ptip b{font-size:11.5px}.ptip i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+#pie path{cursor:pointer;transition:transform .15s}
+.pl{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;font-size:13px;cursor:default}.pl:hover,.pl.hi{background:#eef5f4}.plh{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:4px}.plh b{font-weight:700}.plh:hover{background:none}.plh i{background:none}
+.pl i{width:12px;height:12px;border-radius:3px;flex:0 0 12px}.pl span{flex:1}.pl b{font-variant-numeric:tabular-nums}.pl em{font-style:normal;color:var(--mut);width:52px;text-align:right}
+button.b.pressed{transform:scale(.96);filter:brightness(1.15)}
+.rbtn{font:inherit;font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;background:#fff;border:1px solid var(--teal);color:var(--teal)}.rbtn:hover{background:#eef5f4}
+.rbtn.del{border-color:var(--red);color:var(--red)}.rbtn.del:hover{background:#fbe3e3}
+#tSales tbody tr.gone td{background:#fbe3e3!important;transition:background .2s}
+.tabs{display:inline-flex;background:#eef2f1;border-radius:8px;padding:3px}.tab{font:inherit;font-size:13px;font-weight:600;border:0;background:none;padding:5px 14px;border-radius:6px;cursor:pointer;color:var(--mut)}.tab.on{background:#fff;color:var(--teal);box-shadow:0 1px 3px #0002}
+.calc{max-width:760px}.calc td{font-size:14.5px;padding:9px 10px}.calc .op{color:var(--mut);width:28px;text-align:center;font-weight:700}.calc tr.sub td{background:#f2f7f6;font-weight:700}.calc tr.fin td{background:var(--lt);font-weight:800;font-size:16px}.calc .how{color:var(--mut);font-size:12px}
+.lbadge{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;border-radius:10px;background:#eef5f4;border:1px solid var(--lt);font-size:14px}.lbadge b{font-size:20px;color:var(--teal)}
+#tSales thead th{position:sticky;top:0;z-index:2}
+#tSales tr.tot td{position:sticky;bottom:0;z-index:2;box-shadow:0 -1px 0 var(--line)}
+.mnote{font-size:11.5px;font-style:italic;color:var(--amber);margin-top:4px;line-height:1.35}
+.vatout{background:#eef2f1!important;color:var(--ink);font-weight:600;cursor:default}
+.ibadge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 11px;width:11px;height:11px;border-radius:50%;background:var(--teal);color:#fff;font-size:8px;line-height:1;font-weight:700;font-style:normal;cursor:help;opacity:.85}.ibadge:hover{opacity:1}
+.lblrow{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.totbox{background:#eef5f4!important;border-color:var(--teal)!important}.totbox output{display:block;padding:7px 9px;border-radius:6px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:14.5px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.chtot{display:block;min-height:33px;padding:7px 9px;border-radius:6px;background:#eef5f4;border:1px solid var(--lt);font-weight:700;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.totbox output.grand{background:var(--teal);color:#fff;border-color:var(--teal)}
+#sChans .chbox>b{font-size:16px;letter-spacing:-.1px}
+#sChans .chbox label{font-size:11px}
+#sChans .chbox input{font-size:14px}#sChans .chbox output{font-size:14.5px}
+.toprow{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin-bottom:16px;align-items:stretch}
+.toprow #kpis>.card{height:100%;box-sizing:border-box;margin:0}
+.piewrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.piewrap #pieLeg{flex:1;min-width:200px}
+@media(max-width:1000px){.toprow{grid-template-columns:1fr}}
+.accbar{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 8px}
+.accgroup{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.acchead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#f8fbfa}
+.accsub{font-size:12px;color:var(--mut);margin-top:2px}
+.seg{display:inline-flex;border:1px solid var(--teal);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:12.5px;font-weight:600;color:var(--teal);background:#fff;border:0;padding:6px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--teal)}.seg button:hover{background:#eef5f4}.seg button:active{background:var(--teal);color:#fff}
+details.acc{border-top:1px solid var(--line)}details.acc:first-of-type{border-top:0}
+details.acc>summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto 18px;align-items:center;gap:16px;padding:14px 18px;cursor:pointer;user-select:none}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary:hover{background:#f6f9f8}
+.acct{font-weight:650;color:var(--ink);font-size:14.5px}
+.accs{color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}.accs b{color:var(--ink)}
+.chev{display:inline-block;transition:transform .2s;color:var(--teal);font-size:20px;line-height:1;width:14px;text-align:center}
+details.acc[open]>summary .chev{transform:rotate(90deg)}
+details.acc[open]>summary{border-bottom:1px dashed var(--line);background:#f8fbfa}details.acc[open] .acct{color:var(--teal)}
+.accb{padding:14px 18px 16px}
+@media print{details.acc .accb{display:block}}
+.toast{position:fixed;bottom:74px;right:20px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin-top:8px}
+.legend span i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.chanin{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.chbox{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fafcfb}.chbox b{display:block;color:var(--teal);margin-bottom:6px}.chbox label{margin-bottom:6px}
+.att{color:var(--teal);cursor:pointer;text-decoration:underline}
+@media print{header nav,.noprint,button{display:none!important}section{display:block!important;page-break-after:always}body{background:#fff}.tw{max-height:none}}
+
+#demoBadge{display:none;align-items:center;gap:8px;font-size:12px;color:#fff;background:#ffffff1f;border:1px solid #ffffff40;padding:4px 10px;border-radius:999px}
+#demoBadge button{font:inherit;font-size:11.5px;font-weight:700;color:#fff;background:#b23b3b;border:0;border-radius:999px;padding:2px 9px;cursor:pointer}
+#wkGrid input,#ohGrid input{width:96px!important}
+#invUpL{background:var(--teal);color:#fff!important}
+#bkRestore{border:1px solid var(--teal);color:var(--teal)!important;background:#fff}
+td.n,th.n,.n,input,output,.kv b,svg text{font-variant-numeric:tabular-nums lining-nums}
+.shtbl thead th{vertical-align:middle;padding-top:9px;padding-bottom:9px;white-space:nowrap}
+.shtbl th.dayh{text-align:center;line-height:1.15;padding-right:26px}
+.shtbl th.dayh .dname{display:block;font-weight:650;font-size:12.5px;letter-spacing:.02em}
+.shtbl th.dayh .ddate{display:block;font-weight:500;font-size:10.5px;opacity:.75;margin-top:2px;font-variant-numeric:tabular-nums}
+.shtbl th.shtot{background:#1f4542;text-align:right}
+.shtbl th.shcode{width:64px}
+.shtbl th.dayh{padding-left:6px;padding-right:6px}.shtbl tbody td:has(> span > input){text-align:center}
+.shtbl th.dayh .dname,.shtbl th.dayh .ddate{padding-right:0}
+.shtbl th.dayh .dwrap{display:inline-flex;align-items:center;gap:2px}
+.shtbl th.dayh .dbox{display:inline-block;text-align:center}
+.shtbl th.dayh .dgap{display:inline-block;width:17px}
+.shtbl th.dayh .dname{font-size:13.5px;font-weight:700;text-transform:capitalize;letter-spacing:.01em}
+.shtbl th.dayh .ddate{font-size:11px}
+button.x.arm{background:var(--red,#c0392b);color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;font-style:normal}
+#imList{max-height:52vh;overflow:auto}
+input:not([type=number]){font-variant-numeric:normal}
+#invDel.arm{background:var(--red,#c0392b)!important;color:#fff!important}
+#invDl:disabled,#invDel:disabled{opacity:.4;cursor:not-allowed}
+#invUpL,#invDl,#invDel{font-size:14px!important;font-weight:650!important;font-style:normal!important;padding:9px 16px!important;min-height:38px;line-height:1.2;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;box-sizing:border-box;letter-spacing:.01em}
+#tLabSum th{font-size:14px;font-weight:700;padding:11px 10px;vertical-align:middle;letter-spacing:.01em}
+.shtbl thead th:not(.dayh){font-size:13.5px;font-weight:700;letter-spacing:.01em}
+.sdbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.sdlbl{display:block;font-size:11px;color:var(--mut);margin-bottom:4px}
+.sdinfo{font-size:12.5px;color:var(--mut)}
+.sdwrap{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.sdtbl{width:100%;border-collapse:separate;border-spacing:0}
+.sdtbl thead tr:first-child th{position:sticky;top:0;z-index:3;font-size:13px;font-weight:700;vertical-align:middle;padding:9px 10px;height:46px;box-sizing:border-box}
+.sdtbl thead th small{display:block;font-size:10.5px;font-weight:500;opacity:.75;margin-top:1px}
+.sdtbl thead tr.sdfrz th{position:sticky;top:46px;z-index:3;background:#dfeae7;color:var(--ink);font-weight:700;font-size:13.5px;padding:9px 10px;border-bottom:2px solid var(--teal)}
+.sdtbl th.sdc,.sdtbl td.sdc{position:sticky;left:0;z-index:2;text-align:left;white-space:nowrap}
+.sdtbl thead th.sdc{z-index:4}
+.sdtbl td.sdc{background:var(--card,#fff)}
+.sdtbl td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:13.5px;white-space:nowrap}
+.sdtbl td.sdc b{display:inline-block;width:34px;font-weight:650}
+.sdtbl .sdsep{border-left:2px solid var(--line)}
+.sdtbl td.sdtot{font-weight:700;background:#f4f8f7}
+.sdtbl thead tr.sdfrz th.sdtot{background:#cfe0dc}
+.sdtbl tbody tr{cursor:pointer}
+.sdtbl tbody tr:hover td{background:#eef5f3}
+.sdtbl tr.sdwe td.sdc{color:var(--teal)}
+.sdtbl tr.sdempty td{color:var(--mut)}
+.sddash{color:var(--mut);opacity:.6}
+#sdGroup{margin-top:16px}
+.seg button.on{background:var(--teal);color:#fff}
+.sdtbl thead tr:first-child th,.shtbl thead th:not(.dayh){font-variant-numeric:normal}
+.allnote{background:#eef5f3;border:1px solid #cfe0dc;color:var(--ink);border-radius:8px;padding:8px 12px;font-size:13px;margin:6px 0 10px}
+input.ro,input[readonly].ro{background:#f1f4f3!important;color:var(--ink);cursor:default}
+.ib.ibhide{visibility:hidden}
+button:disabled{opacity:.45;cursor:not-allowed}
+#fabSave{position:fixed;right:22px;bottom:22px;z-index:60;display:inline-flex;align-items:center;gap:7px;background:var(--teal);color:#fff;border:0;border-radius:999px;padding:9px 16px 9px 13px;font:inherit;font-size:13.5px;font-weight:650;letter-spacing:.01em;box-shadow:0 6px 18px rgba(20,50,45,.28);cursor:pointer;transition:transform .15s,box-shadow .15s}
+#fabSave svg{width:16px;height:16px}
+#fabSave:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(20,50,45,.34)}
+#fabSave i{display:none;width:8px;height:8px;border-radius:50%;background:#f0b429;margin-left:2px}
+#fabSave.dirty i{display:inline-block}
+section{padding-bottom:56px}
+select.pulse{outline:3px solid #f0b429;outline-offset:2px}
+@media print{#fabSave{display:none}}
+#fStore:has(option[value='']:checked),#sStore:has(option[value='']:checked),#wkStore:has(option[value='']:checked),#ohStore:has(option[value='']:checked),#lStore:has(option[value='']:checked),#nStore:has(option[value='']:checked){background:#e3efec!important;border:1.5px solid var(--teal)!important;color:var(--teal)!important;font-weight:650}
+#fStore option[value=''],#sStore option[value=''],#wkStore option[value=''],#ohStore option[value=''],#lStore option[value=''],#nStore option[value='']{font-weight:700;background:#e3efec;color:#1f4542}
+.acc .accs{display:none}
+.vsw{display:flex;justify-content:flex-end;margin:0 0 10px}
+.vsw{gap:0}.vsw button{font:inherit;font-size:12.5px;font-weight:600;color:var(--teal);background:#fff;border:1px solid var(--teal);padding:5px 14px;cursor:pointer}
+.vsw button:first-child{border-radius:8px 0 0 8px}.vsw button:last-child{border-radius:0 8px 8px 0}.vsw button+button{border-left:0}
+.vsw button.on{background:var(--teal);color:#fff}
+.vpie{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding:4px 6px}
+.vleg{flex:1;min-width:280px;font-size:13px}
+.vl{display:grid;grid-template-columns:12px 1fr auto 56px;gap:10px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--line)}
+.vl i{width:11px;height:11px;border-radius:3px}.vl b{font-weight:650;text-align:right}.vl em{font-style:normal;color:var(--mut);text-align:right}
+.vlh{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}.vlh b{font-weight:600}
+.vkey{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;margin:0 0 6px 4px}.vkey span{display:inline-flex;align-items:center;gap:6px}.vkey i{width:11px;height:11px;border-radius:3px}
+svg.vbar{width:100%;max-width:900px;height:auto;display:block}
+svg.vbar rect:hover,.vpie path:hover{opacity:.85}
+.vempty{padding:30px;text-align:center;color:var(--mut)}
+.shtbl .ib svg{width:13px;height:13px;display:block}.shtbl .ib{padding:2px}
+.xwrap{margin-left:auto;align-self:flex-end}
+.xbtn{display:inline-flex;align-items:center;gap:6px}.xcar{font-size:10px;opacity:.8}
+#xMenu{position:fixed;z-index:120;width:200px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(20,50,45,.18);padding:6px;display:none}
+#xMenu.on{display:block}
+#xMenu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:8px 10px;cursor:pointer;font:inherit}
+#xMenu button:hover{background:#eef5f3}#xMenu b{display:block;font-size:13.5px;color:var(--ink)}#xMenu small{display:block;font-size:11px;color:var(--mut);margin-top:1px}
+.vtools{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:0 0 10px}
+.vtools .vsw{margin:0}
+.vsw button{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px}
+.vsw button svg{width:16px;height:16px}
+.acctools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.vlab{font-size:12px;color:var(--mut)}
+.zctl{display:flex;align-items:center;gap:4px}
+.zctl .zb,.zctl .zpc{font:inherit;font-size:12px;font-weight:650;color:var(--teal);background:#fff;border:1px solid var(--line);border-radius:7px;height:26px;cursor:pointer}
+.zctl .zb{width:26px;font-size:15px;line-height:1}.zctl .zpc{min-width:50px;font-variant-numeric:tabular-nums}
+.zctl button:hover{border-color:var(--teal)}.zhint{font-size:11px;color:var(--mut);font-style:italic;margin-left:6px;opacity:.8}
+.zwrap{overflow:auto;touch-action:pan-x pan-y;border-radius:8px}
+.zwrap.zoomed{max-height:72vh;outline:1px dashed var(--line);outline-offset:4px}
+.vall{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;align-items:start;margin-bottom:12px}
+.vcell{border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.vcap{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);font-weight:650;margin-bottom:6px}
+.vall .vpie{flex-direction:column;align-items:stretch;gap:10px}.vall .vpie svg{align-self:center}.vall .vleg{min-width:0}
+@media(max-width:900px){.vall{grid-template-columns:1fr}}
+.zin svg.vbar{width:calc(100% * var(--z,1));max-width:calc(900px * var(--z,1))}
+[data-p].pon{background:#e3efec!important;border-color:var(--teal)!important;color:var(--teal)!important;font-weight:700;box-shadow:inset 0 0 0 1px var(--teal)}
+.vcell{overflow:auto}
+.acctools .vlab{font-size:12.5px;font-weight:600;color:var(--teal)}
+.acctools .vglob{margin:0!important;display:inline-flex;border:1px solid var(--teal);border-radius:8px;overflow:hidden}
+.acctools .vglob button{border:0;border-radius:0!important;height:30.125px;padding:0 14px;box-sizing:border-box}
+.acctools .vglob button+button{border-left:1px solid var(--teal)}
+.acctools .vglob button svg{width:15px;height:15px}
+.zglob{margin-right:6px}.zglob .vlab{margin-right:4px}
+.acctools .zglob .zb,.acctools .zglob .zpc{height:32px;border-color:var(--teal)}.acctools .zglob .zb{width:32px}
+.stwrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.stnav{position:sticky;top:12px;padding:10px!important;margin:0}
+.stnavh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;padding:6px 10px 8px}
+.stnav button{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;border-radius:8px;padding:9px 12px;margin:2px 0;cursor:pointer;font:inherit}
+.stnav button b{display:block;font-size:13.5px;font-weight:650;color:var(--ink)}.stnav button small{display:block;font-size:11px;color:var(--mut);margin-top:1px}
+.stnav button:hover{background:#f2f7f6}
+.stnav button.on{background:#e3efec;border-left-color:var(--teal)}.stnav button.on b{color:var(--teal)}
+.stmain{margin:0;min-height:420px}
+.stpane{display:none}.stpane.on{display:block}
+.stpane h2{margin:0 0 2px}.sthelp{color:var(--mut);font-size:12.5px;margin:0 0 14px}
+.sth3{font-size:13.5px;color:var(--teal);margin:22px 0 8px}
+.stadd{display:flex;gap:8px;align-items:center;margin-top:12px;padding:10px;background:#f6f9f8;border:1px dashed var(--line);border-radius:8px;flex-wrap:wrap}
+.stadd input:not([style*=width]){flex:1;min-width:180px}
+.rcinfo{font-size:13px;color:var(--ink);margin-right:auto}
+.b.dz{background:#fff;color:var(--red);border:1px solid var(--red)}
+.b.arm,.b.dz.arm{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
+.bkpend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px solid #f0c9c9;background:#fdf3f3;border-radius:8px;font-size:13px}
+#demoBadge button.arm{background:#fff!important;color:var(--red)!important}
+@media(max-width:820px){.stwrap{grid-template-columns:1fr}.stnav{position:static}}
+.stpane .tw{max-height:none}
+.chbox input[type=number],.shtbl input[type=number],#tLabSum input[type=number],#stLab input,#stRate,#stStaff input[type=number],#stNewStaffRate{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='16'><text x='0' y='12.5' font-family='Arial' font-size='13' fill='%231d2a29' fill-opacity='0.4'>£</text></svg>")!important;background-repeat:no-repeat!important;background-position:8px 50%!important;padding-left:22px!important}
+.gbp{opacity:.5;font-weight:inherit;margin-right:1px}
+#stStores td:last-child,#stChans td:last-child,#stSup td:last-child,#stCat td:last-child,#stStaff td:last-child,#stLab td:last-child{width:44px;text-align:right}
+#kpis table.sum th{font-size:14px;font-weight:700;padding:11px 10px;vertical-align:middle;letter-spacing:.01em}
+.privbtn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);color:#e6f0ee;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 11px 4px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-right:10px}
+.privbtn svg{width:14px;height:14px;display:block}.privbtn:hover{background:rgba(255,255,255,.18)}
+.privbtn .pe-off{display:none}.privbtn.on .pe-on{display:none}.privbtn.on .pe-off{display:block}.privbtn.on{background:#e3efec;color:var(--teal);border-color:#e3efec}
+body.priv #hoverTip,body.priv #pieTip{display:none!important}
+
+body.priv td.n:not(:has(input)),body.priv tr.sdfrz th.n,body.priv .pl:not(.plh) b,body.priv .pl:not(.plh) em,body.priv .vl:not(.vlh) b,body.priv .vl:not(.vlh) em,body.priv output,body.priv .accs b{font-size:0!important}
+body.priv td.n:not(:has(input))::before,body.priv tr.sdfrz th.n::before,body.priv .pl:not(.plh) b::before,body.priv .pl:not(.plh) em::before,body.priv .vl:not(.vlh) b::before,body.priv .vl:not(.vlh) em::before,body.priv output::before,body.priv .accs b::before{content:"*****";font-size:14px;letter-spacing:1px;color:var(--mut);font-weight:600}
+body.priv input[type=number]{color:transparent!important}
+body.priv input[type=number]:not(:placeholder-shown),body.priv :is(#tLabSum,#stLab,#stStaff,#stRate,#stNewStaffRate) input[type=number]:not(:placeholder-shown),body.priv input#stRate:not(:placeholder-shown){caret-color:transparent;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='16'><text x='0' y='14' font-family='Arial' font-size='15' fill='%236b7a78'>*****</text></svg>")!important;background-repeat:no-repeat!important;background-position:right 10px center!important}
+body.priv input[type=number]::placeholder{color:transparent}
+body.priv #tT::before{color:#cfe3e1}
+.lg{display:none}
+body.locked .lg{display:flex;position:fixed;inset:0;z-index:1000;overflow:auto;align-items:safe center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 20% 0%,#3f7a76 0%,#2F5F5C 45%,#1f4542 100%)}
+body.locked>header,body.locked>main,body.locked>section,body.locked #fabSave,body.locked .toast~*:not(.lg):not(#toast){visibility:hidden}
+body.locked main{visibility:hidden}
+.lgcard{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:30px 30px 22px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+.lglogo{width:48px;height:48px;border-radius:13px;background:#e3efec;color:var(--teal);display:flex;align-items:center;justify-content:center;margin-bottom:14px}.lglogo svg{width:26px;height:26px}
+.lgcard h1{margin:0;font-size:22px;color:var(--ink);letter-spacing:-.01em}.lgsub{margin:4px 0 18px;color:var(--mut);font-size:13.5px}
+#lgForm label,.lgforgot label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mut);margin-bottom:12px}
+#lgForm input,.lgforgot input{font-size:15px;padding:10px 12px;border-radius:9px}
+.lgpw{position:relative;display:block}.lgpw input{width:100%;box-sizing:border-box;padding-right:64px!important}
+.lgeye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--teal);font:inherit;font-size:12px;font-weight:650;cursor:pointer;padding:6px 8px}
+.lgerr{min-height:18px;color:var(--red);font-size:12.5px;margin:-4px 0 8px}
+.lgbtn{width:100%;padding:12px!important;font-size:15px!important;border-radius:10px!important}
+.lglink{display:block;margin:12px auto 0;background:none;border:0;color:var(--teal);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline}
+.lgforgot p{font-size:13px;color:var(--ink);margin:0 0 12px}
+.lgfoot{text-align:center;color:var(--mut);font-size:11px;margin:16px 0 0}
+#admInfo td:first-child{width:180px;color:var(--mut)}.admpw{letter-spacing:2px}
+.lgsub.ok{color:var(--green,#2e7d4f);font-weight:600}
+.prof{position:relative;margin-left:12px}
+.profbtn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:999px;padding:3px 10px 3px 3px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:600}
+.profbtn:hover{background:rgba(255,255,255,.18)}.pcar{width:13px;height:13px;opacity:.8}.pnm{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pav{width:26px;height:26px;border-radius:50%;background:#e3efec;color:var(--teal);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.02em;flex:0 0 auto}
+.pav.big{width:38px;height:38px;font-size:14px}
+.pmenu{position:absolute;right:0;top:calc(100% + 8px);width:250px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(20,50,45,.22);padding:6px;display:none;z-index:200}
+.pmenu.on{display:block}
+.phead{display:flex;gap:10px;align-items:center;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.phead b{display:block;color:var(--ink);font-size:14px}.phead small{display:block;color:var(--mut);font-size:12px;word-break:break-all}
+.pmenu button{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:8px;padding:9px 10px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;text-align:left}
+.pmenu button svg{width:17px;height:17px;color:var(--teal)}.pmenu button:hover{background:#eef5f3}
+.pmenu .pout{color:var(--red)}.pmenu .pout svg{color:var(--red)}.pmenu .pout:hover{background:#fdf3f3}
+.aum{display:none;position:fixed;inset:0;background:rgba(15,35,32,.45);z-index:300;align-items:center;justify-content:center;padding:20px}.aum.on{display:flex}
+.aucard{background:#fff;border-radius:14px;padding:20px 22px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.auh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.auh b{font-size:17px;color:var(--teal)}
+.aucard label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mut);margin-bottom:10px}.aucard input{font-size:14.5px;padding:9px 11px}
+.youtag{display:inline-block;background:#e3efec;color:var(--teal);font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:4px}
+.dstar{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#cfe3e1;cursor:pointer;font-size:16px;line-height:1;padding:0;margin-right:10px}
+.dstar:hover{background:rgba(255,255,255,.18)}.dstar.on{color:#f0b429;border-color:rgba(240,180,41,.6)}
+.dstar.arm{background:#b23b3b;border-color:#b23b3b;color:#fff}
+</style>
+</head>
+<body class="locked">
+<div class="aum" id="auModal"><div class="aucard"><div class="auh"><b>Add Another User</b><button class="x" id="auX" title="Close">✕</button></div>
+  <p class="sthelp">The new user signs in with their own email and password.</p>
+  <label>Name<input id="auName"></label><label>Email<input id="auEmail" type="text" inputmode="email" autocapitalize="off" placeholder="name@example.com"></label>
+  <label>Password<input id="auPass" type="password"></label><label>Confirm password<input id="auPass2" type="password"></label>
+  <div class="lgerr" id="auErr"></div><div class="row" style="justify-content:flex-end"><button class="b g" id="auCancel">Cancel</button><button class="b" id="auGo">Add User</button></div></div></div>
+<div id="loginScreen" class="lg">
+  <div class="lgcard">
+    <div class="lglogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></div>
+    <h1>KPI Tracker</h1>
+    <p class="lgsub" id="lgSub">Sign in to continue</p>
+    <div id="lgForm">
+      <label id="lgNameRow">Your name<input id="lgName" placeholder="e.g. Alex"></label>
+      <label>Email<input id="lgUser" type="text" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com"></label>
+      <label>Password<span class="lgpw"><input type="password" id="lgPass"><button type="button" class="lgeye" id="lgEye" title="Show password">Show</button></span></label>
+      <label id="lgPass2Row">Confirm password<input type="password" id="lgPass2"></label>
+      <div class="lgerr" id="lgErr"></div>
+      <button class="b lgbtn" type="button" id="lgGo">Sign In</button>
+    </div>
+    <button class="lglink" id="lgForgot" type="button">Forgot password?</button>
+    <div class="lgforgot" id="lgForgotBox" style="display:none">
+      <p>For your privacy the password can't be shown or recovered. You can reset the login: <b>your figures stay</b>, and you'll create a new login with your email and password.</p>
+      <label>Type <b>RESET</b> to confirm<input id="lgReset" autocapitalize="characters"></label>
+      <div class="row"><button class="b dz" type="button" id="lgResetGo">Reset Login</button><button class="b g" type="button" id="lgResetNo">Cancel</button></div>
+    </div>
+    <p class="lgfoot">Works offline · your data stays on this computer</p>
+  </div>
+</div>
+<header>
+  <h1>KPI Tracker</h1>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <button id="demoStar" class="dstar" title="Demo figures"><span class="dsi">☆</span></button><span id="demoBadge" style="display:none!important"></span>
+
+
+  <button id="privBtn" class="privbtn" title="Hide all values (privacy)"><span class="pe-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="pe-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></span><span class="plbl">Hide values</span></button>
+  <span id="saved" style="display:none"></span>
+  <div class="prof" id="prof"><button id="profBtn" class="profbtn" title="Profile"><span class="pav" id="pAv">?</span><span class="pnm" id="pNm">Profile</span><svg class="pcar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="pmenu" id="pMenu"><div class="phead"><span class="pav big" id="pAv2">?</span><div><b id="pNm2"></b><small id="pEm2"></small></div></div>
+      <button id="pAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg>Add Another User</button>
+      <button id="pOut" class="pout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Log Out</button></div></div>
+</header>
+<main>
+
+<!-- DASHBOARD -->
+<section id="dashboard">
+  <div class="card noprint">
+    <div class="row">
+      <label>Start date<input type="date" id="fStart"></label>
+      <label>End date<input type="date" id="fEnd"></label>
+      <label>Location<select id="fStore"></select></label>
+      <button class="b g sm" data-p="thisweek">This Week</button>
+      <button class="b g sm" data-p="lastweek">Last Week</button>
+      <button class="b g sm" data-p="thismonth">This Month</button>
+      <button class="b g sm" data-p="lastmonth">Last Month</button>
+      <button class="b g sm" data-p="all">All Time</button>
+      <div class="spacer" style="flex:1"></div>
+      
+    </div>
+  </div>
+  <div class="toprow">
+    <div id="kpis"></div>
+    <div class="card" style="margin:0"><h2 id="pieTitle">Where Net Sales Go</h2>
+      <div class="piewrap"><div id="pie" style="position:relative"></div><div id="pieLeg"></div></div>
+      <p class="hint" id="pieNote">Move the cursor over a slice to see its value.</p></div>
+  </div>
+  <div id="pieTip" class="ptip"></div>
+  <div class="accgroup">
+  <div class="acchead"><div><h2 style="margin:0">Detailed Breakdown</h2><div class="accsub">Click any section to see its full breakdown</div></div>
+    <div class="acctools"><span class="vlab">View</span><div class="vsw vglob" data-k="*"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="seg"><button onclick="expandEverything()">Expand All</button><button onclick="accAll(false)">Collapse All</button></div></div></div>
+  <details class="acc" data-k="pl"><summary><span class="acct">Summary – Profit and Loss</span><span class="accs" id="sum_pl"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="pl"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_pl"></div><div class="tw vtable" id="tPL"></div><p class="hint">Net Profit = Net Sales − VAT − COGS − Overheads − Labour. Net Margin = Net Profit as a % of Gross Sales. Labour Cost uses the figure typed on the Rota &amp; Labour page, or the rota hours × pay rates.</p></div></details>
+  <details class="acc" data-k="ch"><summary><span class="acct">Summary – Sales Channel</span><span class="accs" id="sum_ch"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="ch"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_ch"></div><div class="tw vtable" id="tCh"></div></div></details>
+  <details class="acc" data-k="mx"><summary><span class="acct">Summary – Net Values</span><span class="accs" id="sum_mx"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="mx"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_mx"></div><div class="tw vtable" id="tMx"></div></div></details>
+  <details class="acc" data-k="sup"><summary><span class="acct">Summary – Cost of Goods Sold</span><span class="accs" id="sum_sup"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="sup"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_sup"></div><div class="tw vtable" id="tSup"></div></div></details>
+  <details class="acc" data-k="ovh"><summary><span class="acct">Summary – Overhead Cost</span><span class="accs" id="sum_ovh"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="ovh"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_ovh"></div><div class="tw vtable" id="tOvh"></div></div></details>
+  <details class="acc" data-k="lab"><summary><span class="acct">Summary – Labour Cost</span><span class="accs" id="sum_lab"></span><span class="chev">›</span></summary>
+    <div class="accb"><div class="vsw" data-k="lab"><button data-v="table" title="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/></svg></button><button data-v="pie" title="Pie chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></button><button data-v="graph" title="Graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></button><button data-v="all" title="All 3 at once"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/></svg></button></div><div class="vchart" id="vc_lab"></div><div class="tw vtable" id="tLab"></div></div></details>
+  </div>
+  <div style="display:none"><button id="calPrev"></button><strong id="calTitle"></strong><button id="calNext"></button><div id="cal"></div></div>
+</section>
+
+<!-- SALES -->
+<section id="sales">
+  <div class="card noprint"><h2>Revenue</h2>
+    <div class="row"><label>Start date<input type="date" id="sDate"></label><label>End date<input type="date" id="sEnd"></label><label>Location<select id="sStore"></select></label></div>
+    <div class="chanin" id="sChans"></div>
+    <div class="row"><label style="flex:1">Notes<input id="sNotes"></label><button class="b g" id="sClear" style="color:var(--red);border-color:var(--red)">Clear</button><button class="b" id="sAdd">Add Revenue</button></div>
+    <p class="hint">For each channel, enter the Gross (incl. VAT) and Net (excl. VAT) from your till or platform reports — the Net is saved exactly as typed. VAT £ fills in as Gross − Net, or type your own. For a single day, use the same start and end date.</p>
+  </div>
+  <!-- Sales detail: drop-down day-by-day view for the Start/End date and Location picked above -->
+  <div class="accgroup noprint" id="sdGroup">
+  <details class="acc" data-k="sd" id="sdAcc"><summary><span class="acct">Sales Detail</span><span class="accs" id="sum_sd"></span><span class="chev">›</span></summary>
+    <div class="accb">
+      <div class="sdbar"><div><span class="sdlbl">Show for each channel</span>
+        <div class="seg" id="sdSeg"><button data-m="gross">Gross</button><button data-m="net" class="on">Net</button><button data-m="vat">VAT</button><button data-m="total">Total</button></div></div>
+        <div class="sdinfo" id="sdInfo"></div></div>
+      <div class="sdwrap" id="sdWrap"></div>
+      <p class="hint" style="margin-top:8px">Click a day to open it in the Revenue boxes above for editing. Total = Net − VAT.</p>
+    </div></details>
+  </div>
+  <!-- Sales log hidden for now: remove style="display:none" below to show it again -->
+  <div class="card" id="salesLogCard" style="display:none"><div class="row" style="justify-content:space-between"><h2 style="margin:0" id="sLogTitle">Sales Log</h2>
+    <div class="row noprint"><input id="sSearch" placeholder="Search…"><button class="b g sm" onclick="csv('sales')">Export CSV</button></div></div>
+    <div class="tw" id="tSales" style="margin-top:10px"></div></div>
+  <div class="card noprint" style="display:none">
+    <span id="sDirty" style="font-size:13px;color:var(--mut)">All changes saved</span>
+    <button class="b" id="sSaveAll" style="padding:9px 22px">Save Changes</button></div>
+</section>
+
+<!-- PURCHASES -->
+<section id="purchases"><div id="wkCard"></div></section>
+
+<!-- ROTA -->
+<section id="rota">
+  <div class="card"><h2>Summary – Labour Cost</h2>
+    <div class="row">
+      <select id="lView" style="display:none"><option value="m">Monthly</option></select>
+      <label id="lWkL" style="display:none"><input type="date" id="lWk"></label>
+      
+      
+      <label>Start date<input type="date" id="lStart"></label>
+      <label>End date<input type="date" id="lEnd"></label>
+      <label>Location<select id="lStore"></select></label>
+      <label id="lYrL" style="display:none">Year<select id="lYr"></select></label>
+      <label id="lMonL" style="display:none">Month<select id="lMon"><option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option></select></label>
+      <button class="b g sm" onclick="lShift(-1)">‹ Previous</button><button class="b g sm" onclick="lShift(1)">Next ›</button>
+      <span id="lRange" style="display:none"></span>
+      
+    </div>
+    <div class="tw" id="tLabSum" style="margin-top:12px"></div>
+    <p class="hint">Pick a Start date and End date — figures cover every day in between. Previous / Next move by the same number of days. Hours come from rota hours already saved (and the sample data). Grey labour cost = those hours × pay rates; type your own monthly figure to replace it. Net sales come from the Sales log (by start date). Labour % = labour cost ÷ net sales.</p>
+  </div>
+</section>
+
+<!-- OVERHEADS -->
+<section id="overheads"><div id="ohCard"></div></section>
+
+<!-- NOTES -->
+<section id="notes">
+  <div class="card noprint"><h2>End of Week Report Comments</h2>
+    <div class="row"><label>Week commencing<input type="date" id="nWeek"></label><label>Location<select id="nStore"></select></label></div>
+    <textarea id="nText" style="margin-top:10px" placeholder="What happened this week…"></textarea>
+    <div class="row" style="margin-top:8px"><button class="b" id="nAdd">Save Note</button></div></div>
+  <div class="card"><h2>All Notes</h2><div class="tw" id="tNotes"></div></div>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings">
+  <div class="stwrap">
+    <aside class="stnav card"><div class="stnavh">Settings</div><button data-st="general"><b>General</b><small>VAT rate and default pay</small></button><button data-st="locations"><b>Locations</b><small>Add, rename, remove</small></button><button data-st="channels"><b>Sales Channels</b><small>Names and VAT</small></button><button data-st="suppliers"><b>Suppliers</b><small>Used on the COGS page</small></button><button data-st="categories"><b>Overhead Categories</b><small>Used on the Overheads page</small></button><button data-st="demo"><b>Demo Figures</b><small>Load or remove sample data</small></button><button data-st="security"><b>Admin</b><small>Login email, password, lock</small></button><button data-st="backup"><b>Backup & Restore</b><small>Download, restore, erase</small></button></aside>
+    <div class="stmain card">
+      <div class="stpane" data-st="general"><h2>General</h2><p class="sthelp">Defaults used across the system.</p>
+        <div class="row"><label>Standard VAT rate (%)<input type="number" step="0.1" id="stVat"></label><label>Default hourly rate (£)<input type="number" step="0.01" id="stRate"></label></div>
+        <p class="hint">The VAT rate is used only when a Net figure is missing (Net = Gross ÷ (1 + VAT)). The default hourly rate is used for staff who have no rate of their own. £12.71 = UK National Living Wage (21+) from April 2026 — please check it is still current.</p></div>
+      <div class="stpane" data-st="locations"><h2>Locations</h2><p class="sthelp">Rename a location and press Enter — every saved entry, staff member and invoice moves with it.</p>
+        <div class="tw" id="stStores"></div>
+        <div class="stadd"><input id="stNewStore" placeholder="New location name"><button class="b" id="stAddStore">Add Location</button></div></div>
+      <div class="stpane" data-st="channels"><h2>Sales Channels</h2><p class="sthelp">Each channel gets its own box on the Sales page.</p>
+        <div class="tw" id="stChans"></div>
+        <div class="stadd"><input id="stNewChan" placeholder="New channel name"><input type="number" step="0.1" id="stNewChanVat" placeholder="VAT %" style="width:100px"><button class="b" id="stAddChan">Add Channel</button></div></div>
+      <div class="stpane" data-st="suppliers"><h2>Suppliers</h2><p class="sthelp">Rows on the COGS Supplier Sheet. Rename and press Enter — saved amounts and invoices follow.</p>
+        <div class="tw" id="stSup"></div>
+        <div class="stadd"><input id="stNewSupCode" placeholder="Code (auto)" style="width:130px"><input id="stNewSup" placeholder="Supplier name"><button class="b" id="stAddSup">Add Supplier</button></div></div>
+      <div class="stpane" data-st="categories"><h2>Overhead Categories</h2><p class="sthelp">Rows on the Overheads Sheet. Names are capitalised automatically.</p>
+        <div class="tw" id="stCat"></div>
+        <div class="stadd"><input id="stNewCatCode" placeholder="Code (auto)" style="width:130px"><input id="stNewCat" placeholder="Category name"><button class="b" id="stAddCat">Add Category</button></div></div>
+      <div class="stpane" data-st="staff" hidden><h2>Staff</h2><p class="sthelp">Leave £/hr blank to use the default hourly rate.</p>
+        <div class="tw" id="stStaff"></div>
+        <div class="stadd"><input id="stNewStaff" placeholder="Name"><select id="stNewStaffStore"></select><input type="number" step="0.01" id="stNewStaffRate" placeholder="£/hr" style="width:100px"><button class="b" id="stAddStaff">Add Staff</button></div></div>
+      <div class="stpane" data-st="labour" hidden><h2>Labour Cost Entries</h2><p class="sthelp">Labour costs typed on the Rota &amp; Labour page. Change an amount and press Enter, or remove it to go back to the rota figure.</p>
+        <div class="tw" id="stLab"></div></div>
+      <div class="stpane" data-st="records" hidden><h2>Saved Entries</h2><p class="sthelp">See how many entries are saved and clear a period if something was entered by mistake. ⌘Z undoes a clear.</p>
+        <div class="tw" id="stCounts"></div>
+        <h3 class="sth3">Clear entries</h3>
+        <div class="row"><label>Type<select id="rcType"><option value="sales">Sales</option><option value="purchases">COGS</option><option value="overheads">Overheads</option><option value="labCost">Labour cost entries</option><option value="all">All of these</option></select></label>
+          <label>Location<select id="rcStore"></select></label><label>Start date<input type="date" id="rcStart"></label><label>End date<input type="date" id="rcEnd"></label></div>
+        <div class="row" style="margin-top:10px"><span id="rcInfo" class="rcinfo"></span><button class="b dz" id="rcGo">Clear Entries</button></div></div>
+      <div class="stpane" data-st="demo"><h2>Demo Figures</h2><p class="sthelp">Sample figures for September–November 2026, to try the system out.</p>
+        <p id="demoState" class="rcinfo"></p>
+        <div class="row"><button class="b" id="bkSample">Load Demo Figures</button><button class="b dz" id="dmRemove">Remove Demo Figures</button></div>
+        <p class="hint">Removing demo figures keeps everything you entered yourself.</p></div>
+      <div class="stpane" data-st="security"><h2>Admin</h2><p class="sthelp">The login details for this tracker on this computer.</p>
+        <div class="tw" id="admInfo"></div>
+        <div id="secState" class="rcinfo" style="display:none"></div>
+        <h3 class="sth3">Users</h3><div class="tw" id="admUsers"></div>
+        <div class="row" style="margin-top:10px"><button class="b g" id="admAdd">+ Add Another User</button></div>
+        <h3 class="sth3">Change my login details</h3>
+        <div class="row"><label>Current password<input type="password" id="scCur"></label><label>Name<input id="scName"></label><label>Email<input id="scUser" type="email" autocapitalize="off"></label><label>New password<input type="password" id="scPass" placeholder="Leave blank to keep"></label><label>Confirm new password<input type="password" id="scPass2"></label></div>
+        <div class="row" style="margin-top:10px"><button class="b" id="scSave">Save Login</button></div>
+        <h3 class="sth3">Automatic lock</h3>
+        <div class="row"><label>Lock after no activity for<select id="scIdle"><option value="0">Never</option><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label></div>
+        <p class="hint">This is a privacy lock for this computer and browser. It stops people opening the tracker without the password, but it is not bank-level encryption — keep your computer itself password-protected too.</p></div>
+      <div class="stpane" data-st="backup"><h2>Backup &amp; Restore</h2><p class="sthelp">Everything is saved in this browser on this computer — no internet needed.</p>
+        <div class="row"><button class="b" id="bkExport">Download Backup (.json)</button>
+          <label id="bkRestore" class="b g" style="flex-direction:row;cursor:pointer">Restore from Backup<input type="file" id="bkImport" accept=".json" style="display:none"></label></div>
+        <div id="bkPending" class="bkpend" style="display:none"></div>
+        <p class="hint">Download a backup every week and keep it somewhere safe — it is the only copy if the browser data is cleared. Attached invoice files stay in the browser and are not inside the .json backup.</p>
+        <h3 class="sth3" style="color:var(--red)">Erase everything</h3>
+        <div class="row"><button class="b dz" id="bkReset">Erase Everything</button><span class="rcinfo">Deletes all entries, locations, staff and lists. Download a backup first.</span></div></div>
+    </div>
+  </div>
+</section>
+</main>
+<div id="invModal" class="modal" onclick="if(event.target===this)closeInv()"><div class="mbox">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 id="invTitle" style="margin:0;font-size:15px;color:var(--teal)"></h2><button class="x" style="color:var(--ink);font-size:20px" onclick="closeInv()">✕</button></div>
+  <div id="invBody" style="margin-top:12px"></div>
+  <div class="row" style="margin-top:12px">
+    <label id="invUpL" style="flex-direction:row;cursor:pointer;padding:7px 14px;border-radius:6px;font-size:14px;font-weight:600">Upload Invoice<input type="file" id="invFile" accept="image/*,application/pdf" style="display:none"></label>
+    <button class="b g" id="invDl">Download</button><button class="b g" id="invDel" style="color:var(--red);border-color:var(--red)">Remove</button>
+  </div></div></div>
+<div id="itemModal" class="modal" onclick="if(event.target===this)closeItems()"><div class="mbox">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 id="imTitle" style="margin:0;font-size:15px;color:var(--teal)"></h2><button class="x" style="color:var(--ink);font-size:20px" onclick="closeItems()">✕</button></div>
+  <div class="row" style="margin-top:12px;padding:10px;background:#f2f7f6;border-radius:8px">
+    <label>Code<input id="imCode" placeholder="auto" style="width:130px"></label>
+    <label style="flex:1"><span id="imNameLbl">Name</span><input id="imName"></label>
+    <button class="b" id="imAdd" onclick="addItemUI()">Add</button></div>
+  <div class="tw" id="imList" style="margin-top:12px;max-height:55vh"></div>
+  <p class="hint" id="imHint"></p>
+</div></div>
+<div id="clrModal" class="modal" onclick="if(event.target===this)closeClr()"><div class="mbox" style="width:min(480px,94vw)">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:15px;color:var(--teal)">Clear Revenue</h2><button class="x" style="color:var(--ink);font-size:20px" onclick="closeClr()">✕</button></div>
+  <p id="clrWhen" style="margin:10px 0 12px;font-weight:600"></p>
+  <label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px;margin-bottom:6px"><input type="radio" name="clrScope" value="one" checked style="background:none"> <span id="clrOne"></span></label>
+  <label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px"><input type="radio" name="clrScope" value="all" style="background:none"> <span id="clrAll"></span></label>
+  <p class="hint" style="margin-top:12px">This deletes those entries from the Sales log and Dashboard, empties the Revenue boxes and moves the dates on every page to today. You can undo it for 10 seconds afterwards.</p>
+  <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="b g" onclick="closeClr()">Cancel</button><button class="b" id="clrGo" style="background:var(--red)">Clear</button></div>
+</div></div>
+<div id="undoBar" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 12px 10px 16px;border-radius:10px;display:none;align-items:center;gap:14px;z-index:70;box-shadow:0 4px 14px #0004">
+  <span id="undoMsg"></span><button class="b sm" id="undoBtn" style="background:#fff;color:var(--ink)">Undo</button></div>
+<div id="hoverTip" class="ptip"></div>
+<button id="fabSave" class="noprint" title="Save (⌘S / Ctrl+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/></svg><span>Save</span><i id="fabDot"></i></button>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- storage ---------- */
+const KEY="kpiTrackerOffline_v1";
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const LEAVE=["Day off","Holiday","Sick","Other leave"];
+const COLORS=["#2F5F5C","#E07A3F","#4A90C2","#C9A227","#8E5BA8","#5BA88E","#C25B6E"];
+function defaults(){return{
+  vat:20,rate:12.71,
+  stores:["Newcastle","Durham","Sunderland"],
+  channels:[{name:"In-store",comm:0},{name:"Uber Eats",comm:30},{name:"Just Eat",comm:14},{name:"Deliveroo",comm:25}],
+  staff:["Alexa Jenkins","Aung","Cayden Cook","Deen","Emily","Koko","Min Kha","Poppy","Ravi","Sakura","Tharun"].map(n=>({name:n,store:"",rate:""})),
+  suppliers:["JJ Foods Service","Bookers Limited","Bidfood Direct","Watan (Mince / Wings)","KMC","Cooksmill","Premvan","Carnivore Cartel","Angus & Oink","Just Gloves","My Packaging","Costco","Medisave","Amazon","Miscellaneous"].map((n,i)=>({code:"SUP-"+String(i+1).padStart(2,"0"),name:n})),
+  cats:["Rent","Electricity & Gas","Water","Business Rates","Insurance","Repairs & Maintenance","Cleaning","Marketing","Software / EPOS","Bank & Card Fees","Waste Collection","Other"],
+  sales:[],purchases:[],rota:[],overheads:[],notes:[{id:uid(),week:"2026-10-26",store:"Newcastle",text:"£41 spent on anniversary from Argos"}]
+};}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+let D;
+try{D=JSON.parse(localStorage.getItem(KEY))||defaults()}catch(e){D=defaults()}
+function fixD(){if(!D.ohcats)D.ohcats=(D.cats||[]).map((n,i)=>({code:"OH-"+String(i+1).padStart(2,"0"),name:n}))}
+fixD();
+setTimeout(()=>{lastSaved=JSON.stringify(D)},0);
+if(!D.prefs)D.prefs={period:"thisweek",store:""};
+if(!D.vatSet20){D.vat=20;D.vatSet20=1}
+if(!D.vatIn0){D.vatIn0=1}
+if(!D.vatIn20){const c=D.channels.find(c=>c.name==="In-store");if(c)c.vat=20;D.vatIn20=1} // hot food in-store is standard-rated (20%)
+if(!D.labCost)D.labCost=[];
+/* Undo / redo for the whole app: ⌘Z (Ctrl+Z) undoes the last change, ⇧⌘Z (Ctrl+Y) redoes it. Keeps the last 50 changes. */
+const UNDO=[],REDO=[];let lastSaved=null,undoGroup=false;
+function save(){const now=JSON.stringify(D);
+  if(lastSaved!==null&&now!==lastSaved&&!undoGroup){UNDO.push(lastSaved);if(UNDO.length>50)UNDO.shift();REDO.length=0;undoGroup=true;setTimeout(()=>undoGroup=false,0)}
+  lastSaved=now;
+  try{localStorage.setItem(KEY,now);flash("saved")}catch(e){toast("Could not save — browser storage full or blocked")}}
+function restoreState(str){D=JSON.parse(str);if(typeof fixD==="function")fixD();lastSaved=str;try{localStorage.setItem(KEY,str)}catch(e){}
+  document.querySelectorAll(".modal.on").forEach(m=>m.classList.remove("on"));const ub=document.getElementById("undoBar");if(ub)ub.style.display="none";render()}
+function appUndo(){if(!UNDO.length)return toast("Nothing to undo");REDO.push(lastSaved);restoreState(UNDO.pop());toast("Undone ("+UNDO.length+" more)")}
+function appRedo(){if(!REDO.length)return toast("Nothing to redo");UNDO.push(lastSaved);restoreState(REDO.pop());toast("Redone")}
+document.addEventListener("keydown",e=>{const mod=e.metaKey||e.ctrlKey;if(!mod)return;const k=e.key.toLowerCase();
+  if(k!=="z"&&k!=="y")return;
+  const t=e.target,typing=t&&(t.tagName==="TEXTAREA"||(t.tagName==="INPUT"&&!["date","file","radio","checkbox"].includes(t.type)));
+  if(typing&&t.value!==t.defaultValue)return; // still typing in a box: let the browser undo the typing first
+  e.preventDefault();(k==="y"||e.shiftKey)?appRedo():appUndo()});
+function flash(){}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2200)}
+
+/* attachments in IndexedDB */
+let idb=null;
+try{const rq=indexedDB.open("kpiTrackerFiles",1);rq.onupgradeneeded=()=>rq.result.createObjectStore("files");rq.onsuccess=()=>idb=rq.result}catch(e){}
+function putFile(id,file){return new Promise(r=>{if(!idb||!file)return r(false);const tx=idb.transaction("files","readwrite");tx.objectStore("files").put({name:file.name,type:file.type,blob:file},id);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false)})}
+function getFile(id){return new Promise(r=>{if(!idb)return r(null);const q=idb.transaction("files").objectStore("files").get(id);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}
+function delFile(id){return new Promise(res=>{if(!idb)return res(false);try{const tx=idb.transaction("files","readwrite");tx.objectStore("files").delete(id);tx.oncomplete=()=>res(true);tx.onerror=tx.onabort=()=>res(false)}catch(e){res(false)}})}
+async function openFile(id){const f=await getFile(id);if(!f)return toast("File not found on this device");const u=URL.createObjectURL(f.blob);window.open(u,"_blank")}
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gbp=v=>(v<0?"−":"")+"£"+Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
+const gbpX=v=>(v<0?"−":"")+"£"+Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:10}); // exact, no rounding
+const pct=v=>isFinite(v)?(v*100).toFixed(1)+"%":"–";
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const ukd=s=>s?s.split("-").reverse().join("/"):"";
+const monday=d=>{const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x};
+const today=()=>iso(new Date());
+const net=g=>g/(1+num(D.vat)/100);
+const rnet=x=>(x.net!==undefined&&x.net!==""&&x.net!==null)?num(x.net):r2(num(x.gross)/(1+rvatp(x)/100));
+const hasVp=x=>x.vatp!==undefined&&x.vatp!==""&&x.vatp!==null;
+const chVat=ch=>{const c=D.channels.find(c=>c.name===ch);return c&&c.vat!==undefined&&c.vat!==""?num(c.vat):num(D.vat)}; // channel default VAT %
+const rvatp=x=>hasVp(x)?num(x.vatp):chVat(x.channel); // rate used only to work out a missing net, or when typed on the row
+const hasVa=x=>x.vatAmt!==undefined&&x.vatAmt!==""&&x.vatAmt!==null;
+const rvat=x=>hasVa(x)?r2(num(x.vatAmt)):hasVp(x)?r2(rnet(x)*num(x.vatp)/100):r2(Math.max(num(x.gross)-rnet(x),0)); // VAT £: typed £, or Net × typed %, otherwise Gross − Net
+const rvatShow=x=>hasVa(x)?(rnet(x)?r2(num(x.vatAmt)/rnet(x)*100):0):hasVp(x)?num(x.vatp):(rnet(x)?r2((num(x.gross)-rnet(x))/rnet(x)*100):0); // VAT % shown on the row
+const comm=(ch,g)=>{const c=D.channels.find(x=>x.name===ch);return c?g*num(c.comm)/100:0};
+const staffRate=n=>{const s=D.staff.find(x=>x.name===n);return s&&s.rate!==""&&s.rate!=null?num(s.rate):num(D.rate)};
+const dayHrs=v=>LEAVE.includes(v)?0:num(v);
+const hrsIn=(r,test)=>r.days.reduce((a,v,i)=>{const d=parse(r.week);d.setDate(d.getDate()+i);return a+(test(iso(d))?dayHrs(v):0)},0);
+function rotaDayCost(){const m={};D.rota.forEach(r=>r.days.forEach((v,i)=>{const d=parse(r.week);d.setDate(d.getDate()+i);const k=r.store+"|"+iso(d);m[k]=(m[k]||0)+dayHrs(v)*staffRate(r.staff)}));return m}
+const spanDays=(a,b)=>Math.round((parse(b)-parse(a))/864e5)+1;
+function labourCost(store,a,b){ // £ labour for a store between dates a..b (inclusive)
+  const rc=rotaDayCost(),man=(D.labCost||[]).filter(x=>x.store===store&&x.to>=a&&x.from<=b);let t=0;
+  for(let d=parse(a);iso(d)<=b;d.setDate(d.getDate()+1)){const k=iso(d),cov=man.filter(x=>x.from<=k&&x.to>=k).sort((p,q)=>spanDays(p.from,p.to)-spanDays(q.from,q.to))[0];
+    t+=cov?num(cov.amount)/spanDays(cov.from,cov.to):(rc[store+"|"+k]||0)}
+  return t}
+const hrs=r=>r.days.reduce((a,v)=>a+(LEAVE.includes(v)?0:num(v)),0);
+function opts(sel,arr,first){sel.innerHTML=(first?`<option value="">${first}</option>`:"")+arr.map(v=>`<option>${esc(v)}</option>`).join("")}
+function table(cols,rows,tot){
+  let h="<table><thead><tr>"+cols.map(c=>`<th class="${c.n?"n":""}">${c.t}</th>`).join("")+"</tr></thead><tbody>";
+  h+=rows.map(r=>"<tr>"+r.map((v,i)=>`<td class="${cols[i].n?"n":""}">${v}</td>`).join("")+"</tr>").join("");
+  if(tot)h+=`<tr class="tot">`+tot.map((v,i)=>`<td class="${cols[i].n?"n":""}">${v}</td>`).join("")+"</tr>";
+  if(!rows.length)h+=`<tr><td colspan="${cols.length}" style="color:var(--mut);text-align:center;padding:18px">Nothing here yet</td></tr>`;
+  return h+"</tbody></table>"}
+
+/* ---------- nav ---------- */
+const ICO={
+ notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 11h8M8 15h8M8 19h5"/></svg>',
+ settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+ dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+ sales:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z" opacity=".0"/><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ cogs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+ labour:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.6c2.9.3 5 2.4 5 6.4"/></svg>',
+ overheads:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M10 21v-6h4v6"/><path d="M12.5 8.5l-2 3h3l-2 3"/></svg>',
+ backup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>'};
+const TABS=[["dashboard","Dashboard","dashboard"],["sales","Sales","sales"],["purchases","COGS","cogs"],["rota","Rota & Labour","labour"],["overheads","Overheads","overheads"],["notes","Weekly Notes","notes"],["settings","Settings","settings"]];
+const HIDDEN_TABS=["notes"]; // Settings page hidden for now — its data and features still work. Delete "settings" here to show it again.
+$("nav").innerHTML=TABS.filter(t=>!HIDDEN_TABS.includes(t[0])).map(([k,l,ic])=>`<button data-t="${k}">${ICO[ic]}<span>${l}</span></button>`).join("");
+function go(t){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===t));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));render();}
+$("nav").onclick=e=>{const b=e.target.closest("button[data-t]");if(b)go(b.dataset.t)};
+
+/* ---------- period ---------- */
+function periodRange(p){const n=new Date();let s,e;
+  if(p==="thisweek"){s=monday(n);e=new Date(s);e.setDate(s.getDate()+6)}
+  else if(p==="lastweek"){s=monday(n);s.setDate(s.getDate()-7);e=new Date(s);e.setDate(s.getDate()+6)}
+  else if(p==="thismonth"){s=new Date(n.getFullYear(),n.getMonth(),1);e=new Date(n.getFullYear(),n.getMonth()+1,0)}
+  else if(p==="lastmonth"){s=new Date(n.getFullYear(),n.getMonth()-1,1);e=new Date(n.getFullYear(),n.getMonth(),0)}
+  else{const ds=[...D.sales.map(x=>x.date),...D.purchases.map(x=>x.date),...D.rota.map(x=>x.week),...D.overheads.map(x=>x.date)].sort();
+    s=ds.length?parse(ds[0]):n;e=ds.length?parse(ds[ds.length-1]):n}
+  return[s,e]}
+function setPeriod(p){const[s,e]=periodRange(p);$("fStart").value=iso(s);$("fEnd").value=iso(e);calM=new Date(e.getFullYear(),e.getMonth(),1);renderDash();markPeriod()}
+function markPeriod(){const a=$("fStart").value,b=$("fEnd").value;let hit="";
+  ["thisweek","lastweek","thismonth","lastmonth","all"].some(p=>{const[s,e]=periodRange(p);if(iso(s)===a&&iso(e)===b){hit=p;return true}});
+  document.querySelectorAll("[data-p]").forEach(x=>x.classList.toggle("pon",x.dataset.p===hit))}
+document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>setPeriod(b.dataset.p));
+["fStart","fEnd","fStore"].forEach(i=>$(i).onchange=()=>{if(i!=="fStore"&&$("fEnd").value)calM=parse($("fEnd").value);calM&&calM.setDate(1);renderDash()});
+
+/* ---------- dashboard ---------- */
+let calM=null;
+function inP(d){const s=$("fStart").value,e=$("fEnd").value;return(!s||d>=s)&&(!e||d<=e)}
+function compute(){
+  const st=$("fStore").value, keep=x=>!st||x.store===st;
+  const S=D.sales.filter(x=>inP(x.date)&&keep(x)),P=D.purchases.filter(x=>inP(x.date)&&keep(x)),
+        R=D.rota.filter(x=>keep(x)&&hrsIn(x,inP)>0),O=D.overheads.filter(x=>inP(x.date)&&keep(x));
+  const stores=st?[st]:D.stores;
+  const blank=()=>({gross:0,vat:0,net:0,comm:0,cogs:0,lab:0,ovh:0,hrs:0});
+  const by={};stores.forEach(s=>by[s]=blank());const T=blank();
+  const add=(s,k,v)=>{if(!by[s])by[s]=blank();by[s][k]+=v;T[k]+=v};
+  S.forEach(x=>{const g=num(x.gross),n=rnet(x);add(x.store,"gross",g);add(x.store,"net",n);add(x.store,"vat",rvat(x));add(x.store,"comm",comm(x.channel,g))});
+  P.forEach(x=>add(x.store,"cogs",num(x.amount)));
+  R.forEach(x=>add(x.store,"hrs",hrsIn(x,inP)));
+  {const a=$("fStart").value,b=$("fEnd").value;if(a&&b)stores.forEach(s=>add(s,"lab",labourCost(s,a,b)))}
+  O.forEach(x=>add(x.store,"ovh",num(x.amount)));
+  Object.values(by).concat([T]).forEach(o=>o.profit=o.net-o.vat-o.cogs-o.lab-o.ovh);
+  return{S,P,R,O,by,T,stores:Object.keys(by)}}
+/* ---- one shared period + store for every page (stored in the Dashboard's From / To / Store boxes) ---- */
+function pushPeriod(a,b,st){if(a)$("fStart").value=a;if(b)$("fEnd").value=b;if(st!==undefined)$("fStore").value=st;markPeriod()}
+function pullPeriod(startId,endId,storeId,allowAll){const a=$("fStart").value,b=$("fEnd").value,st=$("fStore").value;
+  if(a)$(startId).value=a;if(b)$(endId).value=b;if(storeId&&(st||allowAll))$(storeId).value=st}
+function renderDash(){markPeriod();
+  const c=compute(),T=c.T;
+  const R=(v,b)=>b?v/b:NaN;
+  // Two P&L tables: % of gross sales and % of net sales
+  const who=$("fStore").value?esc($("fStore").value):"All Locations";
+  const plTable=(title,base,baseLbl,rows,note)=>{const ln=(lbl,v,cls,sign)=>`<tr class="${cls||""}"><td>${lbl}</td><td class="n ${v<0?"neg":""}">${sign?"−":""}${gbp(v)}</td><td class="n ${v<0?"neg":""}">${pct(R(v,base))}</td></tr>`;
+    return `<div class="card" style="margin:0"><h2>${title} — ${who}</h2><table class="sum"><thead><tr><th>P&amp;L Metric</th><th class="n">Total Value</th><th class="n">% of ${baseLbl.replace(/\b\w/g,c=>c.toUpperCase())}</th></tr></thead><tbody>
+      ${rows.map(r=>ln(...r)).join("")}</tbody></table><p class="hint">${note}</p></div>`};
+  $("kpis").innerHTML=
+    plTable("Gross Total",T.gross,"gross sales",[["Gross Sales (incl. VAT)",T.gross,"big"],["Net Sales (excl. VAT)",T.net,"big"],["VAT",T.vat,"","− "],["COGS",T.cogs,"","− "],["Overheads",T.ovh,"","− "],["Labour",T.lab,"","− "],["Net Profit",T.profit,"tot"]],
+      "Every line as a share of gross sales (gross = 100%). Net profit = Net sales − VAT − COGS − overheads − labour.");
+  // P&L
+  const plc=[{t:"Location"},{t:"Gross Sales (incl. VAT)",n:1},{t:"Net Sales (excl. VAT)",n:1},{t:"VAT",n:1},{t:"COGS",n:1},{t:"Overheads",n:1},{t:"Labour Cost",n:1},{t:"Net Profit",n:1},{t:"Net Margin",n:1}];
+  const plr=o=>[gbp(o.gross),gbp(o.net),gbp(o.vat),gbp(o.cogs),gbp(o.ovh),gbp(o.lab),`<span class="${o.profit<0?"neg":""}">${gbp(o.profit)}</span>`,pct(R(o.profit,o.gross))];
+  $("tPL").innerHTML=table(plc,c.stores.map(s=>[esc(s),...plr(c.by[s])]),c.stores.length>1?["All Locations",...plr(T)]:null);
+  // channels
+  const ch={};D.channels.forEach(x=>ch[x.name]={g:0,n:0,c:0});
+  const mx={};c.stores.forEach(s=>{mx[s]={};D.channels.forEach(x=>mx[s][x.name]=0)});
+  c.S.forEach(x=>{const g=num(x.gross),n=rnet(x);if(!ch[x.channel])ch[x.channel]={g:0,n:0,c:0};ch[x.channel].g+=g;ch[x.channel].n+=n;ch[x.channel].c+=comm(x.channel,g);
+    if(mx[x.store]){mx[x.store][x.channel]=(mx[x.store][x.channel]||0)+n}});
+  const chn=Object.keys(ch);
+  $("tCh").innerHTML=table([{t:"Channel"},{t:"Gross Sales (incl. VAT)",n:1},{t:"Net Sales (excl. VAT)",n:1},{t:"Sales Mix %",n:1}],
+    chn.map(k=>[esc(k),gbp(ch[k].g),gbp(ch[k].n),pct(R(ch[k].n,T.net))]),
+    ["All Channels",gbp(T.gross),gbp(T.net),T.net?"100.0%":"–"]);
+  $("tMx").innerHTML=table([{t:"Location"},...chn.map(k=>({t:esc(k),n:1})),{t:"Total",n:1}],
+    c.stores.map(s=>[esc(s),...chn.map(k=>gbp(mx[s][k]||0)),`<b>${gbp(chn.reduce((a,k)=>a+(mx[s][k]||0),0))}</b>`]),
+    ["All Locations",...chn.map(k=>gbp(ch[k].n)),gbp(T.net)]);
+  // suppliers
+  const byItem=(rows,field,list,tot,one,totLbl)=>{const m={};rows.forEach(x=>{m[x[field]]=(m[x[field]]||0)+num(x.amount)});
+    const known=list.map(i=>i.name),names=[...known,...Object.keys(m).filter(k=>!known.includes(k))].filter(k=>m[k]);
+    const code=k=>(list.find(i=>i.name===k)||{}).code||"";
+    return table([{t:"Code"},{t:one},{t:"Spend (excl. VAT)",n:1},{t:"% of "+totLbl,n:1}],names.sort((a,b)=>m[b]-m[a]).map(k=>[esc(code(k)),esc(k),gbp(m[k]),pct(R(m[k],tot))]),["","Total "+totLbl,gbp(tot),tot?"100.0%":"–"])};
+  $("tSup").innerHTML=byItem(c.P,"supplier",D.suppliers,T.cogs,"Supplier","COGS");
+  $("tOvh").innerHTML=byItem(c.O,"cat",D.ohcats,T.ovh,"Category","Overheads");
+  // labour
+  const ls={};c.R.forEach(x=>{ls[x.staff]=ls[x.staff]||{h:0,c:0};const h=hrsIn(x,inP);ls[x.staff].h+=h;ls[x.staff].c+=h*staffRate(x.staff)});
+  $("tLab").innerHTML=table([{t:"Location"},{t:"Hours",n:1},{t:"Labour Cost",n:1}],
+    c.stores.map(s=>{const o=c.by[s];return[esc(s),o.hrs.toFixed(2),gbp(o.lab)]}),["All Locations",T.hrs.toFixed(2),gbp(T.lab)]);
+  const sup={},oh={};c.P.forEach(x=>sup[x.supplier]=(sup[x.supplier]||0)+num(x.amount));c.O.forEach(x=>oh[x.cat]=(oh[x.cat]||0)+num(x.amount));
+  VD={stores:c.stores,by:c.by,T,chn,ch,mx,sup,oh};renderViews();
+  const sm=()=>{};
+  sm("pl",`Net Profit <b class="${T.profit<0?"neg":""}">${gbp(T.profit)}</b> · ${c.stores.length} location${c.stores.length===1?"":"s"}`);
+  sm("ch",`Net Sales <b>${gbp(T.net)}</b> · ${chn.length} channels`);
+  sm("mx",`Net Sales <b>${gbp(T.net)}</b> · ${c.stores.length} locations × ${chn.length} channels`);
+  sm("sup",`COGS <b>${gbp(T.cogs)}</b> · ${new Set(c.P.map(x=>x.supplier)).size} suppliers`);
+  sm("ovh",`Overheads <b>${gbp(T.ovh)}</b> · ${new Set(c.O.map(x=>x.cat)).size} categories`);
+  sm("lab",`Labour <b>${gbp(T.lab)}</b> · ${T.hrs.toFixed(2)} hours · ${T.net?pct(T.lab/T.net):"–"} of net sales`);
+  drawPie(T);
+}
+function accAll(open){document.querySelectorAll("details.acc").forEach(d=>d.open=open);accSave()}
+function expandEverything(){document.querySelectorAll("#dashboard .vsw:not(.vglob)").forEach(x=>vSet(x.dataset.k,"all"));document.querySelectorAll("#dashboard details.acc").forEach(d=>d.open=true);accSave();renderViews()}
+function accSave(){try{localStorage.setItem("kpiAccOpen",JSON.stringify([...document.querySelectorAll("details.acc[open]")].map(d=>d.dataset.k)))}catch(e){}}
+(function(){let o=[];try{o=JSON.parse(localStorage.getItem("kpiAccOpen")||"[]")}catch(e){}
+  document.querySelectorAll("details.acc").forEach(d=>{d.open=o.includes(d.dataset.k);d.addEventListener("toggle",accSave)})})();
+/* summary pie — SVG, no libraries; hover shows details, tooltip follows the cursor */
+
+/* ----- Detailed Breakdown: Table / Pie / Graph views (plain SVG, no libraries) ----- */
+let VD=null;
+const VCOL=["#2F5F5C","#E07A3F","#4A90C2","#C9A227","#8E5BA8","#5BA88E","#C25B6E"],VOTHER="#9AA8A6",VTEAL="#2F5F5C";
+function vGet(){try{return JSON.parse(localStorage.getItem("kpiAccView")||"{}")}catch(e){return{}}}
+function vSet(k,v){const o=vGet();o[k]=v;try{localStorage.setItem("kpiAccView",JSON.stringify(o))}catch(e){}}
+const vtip=(t,v,extra)=>`<b>${esc(t)}</b><br>${gbp(v)}${extra?"<br>"+extra:""}`;
+function vPie(items,centre){ // items: [{l,v,c}]
+  items=items.filter(x=>x.v>0);const tot=items.reduce((a,x)=>a+x.v,0);
+  if(!tot)return `<div class="vempty">No figures in this period</div>`;
+  const R0=110,IR=58,C=120;let a=-Math.PI/2,paths="";const pt=(r,g)=>[C+r*Math.cos(g),C+r*Math.sin(g)];
+  items.forEach(x=>{const sw=2*Math.PI*x.v/tot,a2=a+sw,lg=sw>Math.PI?1:0;const[x1,y1]=pt(R0,a),[x2,y2]=pt(R0,a2),[x3,y3]=pt(IR,a2),[x4,y4]=pt(IR,a);
+    const d=items.length===1?`M${C-R0},${C}a${R0},${R0} 0 1,0 ${2*R0},0a${R0},${R0} 0 1,0 ${-2*R0},0M${C-IR},${C}a${IR},${IR} 0 1,1 ${2*IR},0a${IR},${IR} 0 1,1 ${-2*IR},0`:`M${x1},${y1}A${R0},${R0} 0 ${lg},1 ${x2},${y2}L${x3},${y3}A${IR},${IR} 0 ${lg},0 ${x4},${y4}Z`;
+    paths+=`<path class="hastip" d="${d}" fill="${x.c}" fill-rule="evenodd" stroke="#fff" stroke-width="2" data-tip="${esc(vtip(x.l,x.v,pct(x.v/tot)+" of total"))}"/>`;a=a2});
+  return `<div class="vpie"><svg viewBox="0 0 240 240" width="240" height="240">${paths}<text x="120" y="116" text-anchor="middle" font-size="11.5" fill="#6b7a78">${esc(centre)}</text><text x="120" y="136" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1d2a29">${gbp(tot)}</text></svg>
+    <div class="vleg"><div class="vl vlh"><i></i><span></span><b>Value</b><em>%</em></div>${items.map(x=>`<div class="vl"><i style="background:${x.c}"></i><span>${esc(x.l)}</span><b>${gbp(x.v)}</b><em>${pct(x.v/tot)}</em></div>`).join("")}</div></div>`}
+function vBars(cats,series,opt){ // horizontal bars; series: [{n,c,v:[...]}]; opt.stack
+  opt=opt||{};const st=!!opt.stack;
+  const vals=cats.map((_,i)=>st?series.reduce((a,s)=>a+Math.max(s.v[i],0),0):Math.max(0,...series.map(s=>s.v[i])));
+  const mn=st?0:Math.min(0,...series.flatMap(s=>s.v)),mx=Math.max(1,...vals);
+  const LW=170,W=640,PW=W-LW-90,bh=st||series.length===1?18:13,gap=3,grp=st?bh:series.length*bh+(series.length-1)*gap,row=grp+16,H=cats.length*row+28;
+  const sx=v=>LW+PW*(v-mn)/(mx-mn),x0=sx(0);let g="";
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,x=sx(v);g+=`<line x1="${x}" y1="4" x2="${x}" y2="${H-22}" stroke="#e6ecea"/><text x="${x}" y="${H-6}" text-anchor="middle" font-size="10.5" fill="#6b7a78">${v<0?"−":""}£${Math.round(Math.abs(v)).toLocaleString("en-GB")}</text>`}
+  cats.forEach((cname,i)=>{const y0=6+i*row;g+=`<text x="${LW-10}" y="${y0+grp/2+4}" text-anchor="end" font-size="12.5" fill="#1d2a29">${esc(cname)}</text>`;
+    if(st){let acc=0;series.forEach(s=>{const v=Math.max(s.v[i],0);if(!v)return;const xa=sx(acc),xb=sx(acc+v);
+        g+=`<rect class="hastip" x="${xa}" y="${y0}" width="${Math.max(xb-xa-2,1)}" height="${bh}" rx="3" fill="${s.c}" data-tip="${esc(vtip(cname+" · "+s.n,v,pct(v/vals[i])+" of "+cname))}"/>`;acc+=v});
+      g+=`<text x="${sx(vals[i])+6}" y="${y0+bh/2+4}" font-size="11.5" font-weight="650" fill="#1d2a29">${gbp(vals[i])}</text>`}
+    else series.forEach((s,j)=>{const v=s.v[i],y=y0+j*(bh+gap),xa=Math.min(sx(v),x0),w=Math.max(Math.abs(sx(v)-x0),1);
+      g+=`<rect class="hastip" x="${xa}" y="${y}" width="${w}" height="${bh}" rx="3" fill="${v<0?"#b23b3b":s.c}" data-tip="${esc(vtip(cname+(series.length>1?" · "+s.n:""),v))}"/>`+
+        `<text x="${Math.max(sx(v),x0)+6}" y="${y+bh/2+4}" font-size="11" fill="#52514e">${v<0?"−":""}${gbp(Math.abs(v))}</text>`})});
+  g+=`<line x1="${x0}" y1="4" x2="${x0}" y2="${H-22}" stroke="#9aa8a6"/>`;
+  const leg=series.length>1?`<div class="vkey">${series.map(s=>`<span><i style="background:${s.c}"></i>${esc(s.n)}</span>`).join("")}</div>`:"";
+  return leg+`<svg class="vbar" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${g}</svg>`}
+function vTop(obj){ // biggest six + Other, colours in order
+  const e=Object.entries(obj).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);const top=e.slice(0,6).map((x,i)=>({l:x[0],v:x[1],c:VCOL[i]}));
+  const rest=e.slice(6).reduce((a,x)=>a+x[1],0);if(rest>0)top.push({l:"Other ("+(e.length-6)+")",v:rest,c:VOTHER});return top}
+function vChart(k,v){if(!VD)return"";const{stores,by,T,chn,ch,mx,sup,oh}=VD;
+  if(k==="pl"){if(v==="pie")return vPie(stores.map((s,i)=>({l:s,v:by[s].net,c:VCOL[i%7]})),"Net Sales by location");
+    return vBars(stores,[{n:"Net Sales",c:"#4A90C2",v:stores.map(s=>by[s].net)},{n:"Total Costs (VAT, COGS, Overheads, Labour)",c:"#E07A3F",v:stores.map(s=>by[s].vat+by[s].cogs+by[s].ovh+by[s].lab)},{n:"Net Profit",c:"#2F5F5C",v:stores.map(s=>by[s].profit)}])}
+  if(k==="ch"){if(v==="pie")return vPie(chn.map((n,i)=>({l:n,v:ch[n].n,c:VCOL[i%7]})),"Net Sales");
+    return vBars(chn,[{n:"Gross Sales (incl. VAT)",c:"#9AA8A6",v:chn.map(n=>ch[n].g)},{n:"Net Sales (excl. VAT)",c:"#2F5F5C",v:chn.map(n=>ch[n].n)}])}
+  if(k==="mx"){if(v==="pie")return vPie(stores.map((s,i)=>({l:s,v:chn.reduce((a,n)=>a+(mx[s][n]||0),0),c:VCOL[i%7]})),"Net Sales");
+    return vBars(stores,chn.map((n,i)=>({n,c:VCOL[i%7],v:stores.map(s=>mx[s][n]||0)})),{stack:true})}
+  if(k==="sup"||k==="ovh"){const o=k==="sup"?sup:oh;if(v==="pie")return vPie(vTop(o),k==="sup"?"Total COGS":"Total Overheads");
+    const e=Object.entries(o).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);return vBars(e.map(x=>x[0]),[{n:"Spend",c:VTEAL,v:e.map(x=>x[1])}])}
+  if(k==="lab"){if(v==="pie")return vPie(stores.map((s,i)=>({l:s,v:by[s].lab,c:VCOL[i%7]})),"Labour Cost");
+    return vBars(stores,[{n:"Labour Cost",c:VTEAL,v:stores.map(s=>by[s].lab)}])}
+  return""}
+function renderViews(){const V=vGet();document.querySelectorAll(".vsw:not(.vglob)").forEach(sw=>{const k=sw.dataset.k,v=V[k]||"table",box=sw.closest(".accb");
+  sw.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  box.querySelector(".vtable").style.display=v==="table"||v==="all"?"":"none";const ch=box.querySelector(".vchart");ch.style.display=v==="table"?"none":"";
+  ch.innerHTML=v==="table"?"":v==="all"?`<div class="vall"><div class="vcell"><div class="vcap">Pie chart</div>${vChart(k,"pie")}</div><div class="vcell"><div class="vcap">Graph</div>${vChart(k,"graph")}</div></div><div class="vcap" style="margin:4px 0 6px">Table</div>`:vChart(k,v)});
+  const g=document.querySelector(".vglob");if(g){const all=[...document.querySelectorAll(".vsw:not(.vglob)")].map(x=>V[x.dataset.k]||"table");const same=all.every(x=>x===all[0])?all[0]:"";g.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===same))}}
+document.addEventListener("click",e=>{const b=e.target.closest(".vsw button");if(!b)return;const k=b.closest(".vsw").dataset.k;
+  if(k==="*"){document.querySelectorAll(".vsw:not(.vglob)").forEach(x=>vSet(x.dataset.k,b.dataset.v));accAll(true)}else vSet(k,b.dataset.v);renderViews()});
+/* pinch-to-zoom (trackpad pinch, touch screens) + small − / + buttons, per section */
+const ZS=[];
+(function(){ // one zoom for the whole Detailed Breakdown: header − / % / + and pinch anywhere in the breakdown
+  document.querySelectorAll("#dashboard .accb").forEach(bx=>{const sw=bx.querySelector(".vsw");if(!sw)return;
+    const tools=document.createElement("div");tools.className="vtools";sw.before(tools);tools.appendChild(sw);
+    const zw=document.createElement("div");zw.className="zwrap";const zi=document.createElement("div");zi.className="zin";zw.appendChild(zi);tools.after(zw);
+    [bx.querySelector(".vchart"),bx.querySelector(".vtable")].forEach(el=>el&&zi.appendChild(el));
+    ZS.push(z=>{zi.style.zoom=z;zi.style.setProperty("--z",z);zw.classList.toggle("zoomed",Math.abs(z-1)>.01)})});
+  const t=document.querySelector(".acctools");if(!t)return;const g=document.createElement("div");g.className="zctl zglob";
+  g.innerHTML=`<span class="vlab">Zoom</span><button class="zb" data-z="-" title="Zoom out">−</button><button class="zpc" title="Reset to 100%">100%</button><button class="zb" data-z="+" title="Zoom in">+</button>`;t.prepend(g);
+  let gz=1;const setAll=v=>{gz=Math.min(3,Math.max(.5,v));ZS.forEach(f=>f(gz));g.querySelector(".zpc").textContent=Math.round(gz*100)+"%"};
+  g.addEventListener("click",e=>{const b=e.target.closest(".zb,.zpc");if(!b)return;if(b.classList.contains("zpc"))setAll(1);else setAll(gz*(b.dataset.z==="+"?1.2:1/1.2))});
+  const area=document.querySelector("#dashboard .accgroup");
+  area.addEventListener("wheel",e=>{if(!e.ctrlKey)return;e.preventDefault();setAll(gz*Math.exp(-e.deltaY*.01))},{passive:false}); // trackpad pinch
+  let g0=1;area.addEventListener("gesturestart",e=>{e.preventDefault();g0=gz});area.addEventListener("gesturechange",e=>{e.preventDefault();setAll(g0*e.scale)}); // Safari pinch
+  const pts=new Map();let d0=0,z0=1;const dist=()=>{const p=[...pts.values()];return Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)};
+  area.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){d0=dist();z0=gz}});
+  area.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2&&d0)setAll(z0*dist()/d0)});
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>area.addEventListener(ev,e=>{pts.delete(e.pointerId);if(pts.size<2)d0=0}))})();
+function drawPie(T){
+  const S=[["VAT",T.vat,"#9AA8A6"],["COGS",T.cogs,"#E07A3F"],["Overheads",T.ovh,"#C9A227"],["Labour",T.lab,"#4A90C2"],[T.profit>=0?"Net Profit":"Net Loss",Math.max(T.profit,0),"#2F5F5C"]];
+  const base=T.net,parts=S.filter(x=>x[1]>0),tot=parts.reduce((a,x)=>a+x[1],0);
+  $("pieTitle").textContent="Where Net Sales Go — "+($("fStore").value||"All Locations");
+  if(!tot){$("pie").innerHTML=`<div style="height:260px;display:flex;align-items:center;justify-content:center;color:var(--mut)">No figures in this period</div>`;$("pieLeg").innerHTML="";$("pieNote").textContent="";return}
+  const R0=120,C=130,IR=62;let a=-Math.PI/2,paths="";
+  const pt=(r,ang)=>[C+r*Math.cos(ang),C+r*Math.sin(ang)];
+  parts.forEach((x,i)=>{const sw=2*Math.PI*x[1]/tot,a2=a+sw,mid=a+sw/2,lg=sw>Math.PI?1:0;
+    const[x1,y1]=pt(R0,a),[x2,y2]=pt(R0,a2),[x3,y3]=pt(IR,a2),[x4,y4]=pt(IR,a);
+    const d=parts.length===1?`M${C-R0},${C}a${R0},${R0} 0 1,0 ${2*R0},0a${R0},${R0} 0 1,0 ${-2*R0},0M${C-IR},${C}a${IR},${IR} 0 1,1 ${2*IR},0a${IR},${IR} 0 1,1 ${-2*IR},0`
+      :`M${x1},${y1}A${R0},${R0} 0 ${lg},1 ${x2},${y2}L${x3},${y3}A${IR},${IR} 0 ${lg},0 ${x4},${y4}Z`;
+    paths+=`<path d="${d}" fill="${x[2]}" fill-rule="evenodd" stroke="#fff" stroke-width="2" data-i="${i}" data-dx="${Math.cos(mid)*7}" data-dy="${Math.sin(mid)*7}"/>`;a=a2});
+  $("pie").innerHTML=`<svg viewBox="0 0 260 260" width="260" height="260">${paths}<text x="130" y="126" text-anchor="middle" font-size="12" fill="#6b7a78">Net Sales</text><text x="130" y="146" text-anchor="middle" font-size="15" font-weight="700" fill="#1d2a29">${gbp(base)}</text></svg>`;
+  $("pieLeg").innerHTML=`<div class="pl plh"><i></i><span>Breakdown</span><b>Value</b><em>%</em></div>`+parts.map((x,i)=>`<div class="pl" data-i="${i}"><i style="background:${x[2]}"></i><span>${x[0]}</span><b>${gbp(x[1])}</b><em>${pct(x[1]/base)}</em></div>`).join("")+
+    (T.profit<0?`<div class="pl"><i style="background:var(--red)"></i><span>Net loss</span><b class="neg">${gbp(T.profit)}</b><em></em></div>`:"");
+  $("pieNote").textContent=T.profit<0?"VAT and costs are more than net sales, so there is no profit slice — the loss is shown under the chart.":"Each slice is a share of net sales (VAT, costs and profit add up to net sales). Move the cursor over a slice to see its value.";
+  const tip=$("pieTip"),paths_=[...$("pie").querySelectorAll("path")],legs=[...$("pieLeg").querySelectorAll(".pl[data-i]")];
+  const on=i=>{paths_.forEach((p,j)=>{p.style.transform=j===i?`translate(${p.dataset.dx}px,${p.dataset.dy}px)`:"";p.style.opacity=j===i?1:.55});legs.forEach((l,j)=>l.classList.toggle("hi",j===i));
+    const x=parts[i];tip.innerHTML=`<i style="background:${x[2]}"></i><b>${x[0]}</b><br>${gbp(x[1])} · ${pct(x[1]/base)} of net sales`+(T.gross?`<br><span style="opacity:.75">${pct(x[1]/T.gross)} of gross sales</span>`:"");tip.classList.add("on")};
+  const off=()=>{paths_.forEach(p=>{p.style.transform="";p.style.opacity=1});legs.forEach(l=>l.classList.remove("hi"));tip.classList.remove("on")};
+  const move=e=>{const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY+14;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px"};
+  [...paths_,...legs].forEach(el=>{el.addEventListener("mouseenter",e=>{on(+el.dataset.i);move(e)});el.addEventListener("mousemove",move);el.addEventListener("mouseleave",off)})}
+/* charts (canvas, no libraries) */
+function prep(cv){const r=window.devicePixelRatio||1,w=cv.clientWidth,h=+cv.getAttribute("height");cv.width=w*r;cv.height=h*r;cv.style.height=h+"px";const x=cv.getContext("2d");x.scale(r,r);x.font="11px -apple-system,Arial";return[x,w,h]}
+function drawDaily(S,chn){
+  const cv=$("cDaily");const[x,w,h]=prep(cv);
+  const s=$("fStart").value,e=$("fEnd").value;let days=[];
+  if(s&&e){for(let d=parse(s);iso(d)<=e&&days.length<93;d.setDate(d.getDate()+1))days.push(iso(d))}
+  const val={};days.forEach(d=>{val[d]={};chn.forEach(k=>val[d][k]=0)});
+  S.forEach(r=>{if(val[r.date])val[r.date][r.channel]=(val[r.date][r.channel]||0)+rnet(r)});
+  const tot=days.map(d=>chn.reduce((a,k)=>a+(val[d][k]||0),0));const mx=Math.max(1,...tot);
+  const L=56,B=24,T=8,W=w-L-8,H=h-B-T;
+  x.strokeStyle="#e6ecea";x.fillStyle="#6b7a78";x.textAlign="right";
+  for(let i=0;i<=4;i++){const y=T+H-H*i/4;x.beginPath();x.moveTo(L,y);x.lineTo(L+W,y);x.stroke();x.fillText("£"+Math.round(mx*i/4).toLocaleString("en-GB"),L-6,y+4)}
+  if(!days.length){x.textAlign="center";x.fillText("Pick a period",L+W/2,T+H/2);return}
+  const bw=W/days.length,g=Math.min(6,bw*.2);
+  days.forEach((d,i)=>{let y=T+H;chn.forEach((k,j)=>{const v=val[d][k]||0,bh=H*v/mx;x.fillStyle=COLORS[j%COLORS.length];x.fillRect(L+i*bw+g/2,y-bh,bw-g,bh);y-=bh})});
+  x.fillStyle="#6b7a78";x.textAlign="center";const step=Math.ceil(days.length/12);
+  days.forEach((d,i)=>{if(i%step===0)x.fillText(d.slice(8)+"/"+d.slice(5,7),L+i*bw+bw/2,h-8)});
+  $("lgDaily").innerHTML=chn.map((k,j)=>`<span><i style="background:${COLORS[j%COLORS.length]}"></i>${esc(k)}</span>`).join("");
+}
+function drawMix(vals,names){
+  const[x,w,h]=prep($("cMix"));const t=vals.reduce((a,b)=>a+b,0);const cx=w/2,cy=h/2,r=Math.min(w,h)/2-10;
+  if(!t){x.fillStyle="#6b7a78";x.textAlign="center";x.fillText("No sales in period",cx,cy);$("lgMix").innerHTML="";return}
+  let a=-Math.PI/2;vals.forEach((v,i)=>{const s=2*Math.PI*v/t;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,a,a+s);x.closePath();x.fillStyle=COLORS[i%COLORS.length];x.fill();a+=s});
+  x.beginPath();x.arc(cx,cy,r*.58,0,7);x.fillStyle="#fff";x.fill();x.fillStyle="#1d2a29";x.textAlign="center";x.font="bold 15px -apple-system,Arial";x.fillText(gbp(t),cx,cy+2);x.font="11px Arial";x.fillStyle="#6b7a78";x.fillText("net excl VAT",cx,cy+18);
+  $("lgMix").innerHTML=names.map((k,i)=>`<span><i style="background:${COLORS[i%COLORS.length]}"></i>${esc(k)} ${pct(vals[i]/t)}</span>`).join("");
+}
+function drawCal(){
+  if(!calM)calM=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  $("calTitle").textContent=calM.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+  const st=$("fStore").value,byd={};D.sales.forEach(x=>{if(!st||x.store===st)byd[x.date]=(byd[x.date]||0)+num(x.gross)});
+  let h=DAYS.map(d=>`<div class="h">${d}</div>`).join("");const s=monday(calM);
+  for(let i=0;i<42;i++){const d=new Date(s);d.setDate(s.getDate()+i);const k=iso(d);if(i>=35&&d.getMonth()!==calM.getMonth())break;
+    h+=`<div data-d="${k}" class="${d.getMonth()!==calM.getMonth()?"o":""} ${inP(k)&&$("fStart").value?"in":""}" style="cursor:pointer"><div class="d">${d.getDate()}</div>${byd[k]?`<div class="amt">${gbp(byd[k])}</div>`:""}</div>`}
+  $("cal").innerHTML=h}
+$("cal").onclick=e=>{const c=e.target.closest("[data-d]");if(!c)return;go("sales");$("sDate").value=c.dataset.d;$("sEnd").value=c.dataset.d;if($("fStore").value)$("sStore").value=$("fStore").value;loadDay()};
+$("calPrev").onclick=()=>{calM.setMonth(calM.getMonth()-1);drawCal()};$("calNext").onclick=()=>{calM.setMonth(calM.getMonth()+1);drawCal()};
+
+/* ---------- sales ---------- */
+const r2=v=>Math.round(v*100)/100;
+const hasNet=x=>x.net!==undefined&&x.net!==""&&x.net!==null;
+const vatPct=(g,n)=>n?(g-n)/n*100:0;              // VAT as % of net (20% = gross ÷ 1.2)
+const sKey=(x,d,e,s,ch)=>x.date===d&&(x.end||x.date)===e&&x.store===s&&x.channel===ch;
+// entries for the picked store that sit fully inside the picked Start–End dates (works for a day, a week or a month)
+const inPeriod=(x,d,e,s)=>(!s||x.store===s)&&x.date>=d&&(x.end||x.date)<=e;
+// note shown when the cursor is on a Net value in Revenue
+function vatTip(total){return total
+  ?"<b>Total VAT</b><br>The VAT of all four channels added together."
+  :"<b>How VAT is calculated</b><br>VAT £ = Gross − Net (filled in automatically).<br>e.g. £1,200 − £1,000 = £200.<br>You can type your own VAT £ to override it."}
+function grossTip(ch,total){if(total)return "<b>Total Gross</b><br>Gross sales of all four channels added together.";
+  return /^in[- ]?store$/i.test(ch)?"<b>Gross sales (incl. VAT)</b><br>Total till takings for these dates,<br>including VAT."
+  :"<b>Gross sales (incl. VAT)</b><br>The full order value customers paid on "+ch+",<br>including VAT, before commission and fees."}
+function netTip(ch,total){if(total)return "<b>Total Net</b><br>Net of all four channels added together.";
+  return /^in[- ]?store$/i.test(ch)
+  ?"<b>Net sales (excl. VAT)</b><br>Your till takings with VAT removed.<br>No platform commission applies to in-store sales."
+  :"<b>Net payout</b><br>The amount "+ch+" pays you after deducting its<br>platform commission and service fees."}
+function revTotals(){if(!$("tG"))return;let G=0,N=0,V=0;
+  D.channels.forEach((c,i)=>{if(!$("sc"+i))return;const n=$("sn"+i).value,v=$("sv"+i).value;G+=num($("sc"+i).value);N+=num(n);V+=num(v);
+    const t=$("st"+i);if(t){const tv=r2(num(n)-num(v));t.textContent=n===""?"":gbp(tv);t.classList.toggle("neg",n!==""&&tv<0)}});
+  $("tG").textContent=gbp(r2(G));$("tN").textContent=gbp(r2(N));$("tV").textContent=gbp(r2(V));$("tT").textContent=gbp(r2(N-V));$("tT").classList.toggle("neg",N-V<0);$("tVp").textContent=N?"("+r2(V/N*100)+"%)":""}
+function vatLbl(i){setTimeout(revTotals,0);const n=num($("sn"+i).value),v=$("sv"+i).value;$("svp"+i).textContent=(v!==""&&n)?"("+r2(num(v)/n*100)+"%)":""}
+function vatBox(i,saved){ // fills VAT £ with Gross − Net unless you have typed your own figure
+  const g=$("sc"+i).value,n=$("sn"+i).value,out=$("sv"+i);if(!out)return;
+  if(saved!==undefined){out.value=saved===""?"":saved;out.dataset.o=out.value;out.dataset.m="";return vatLbl(i)}
+  if(out.dataset.m==="1")return vatLbl(i);
+  out.value=(g===""||n==="")?"":r2(num(g)-num(n));vatLbl(i)}
+function vatTyped(i){const out=$("sv"+i);out.dataset.m=out.value===""?"":"1";if(out.value==="")vatBox(i);else vatLbl(i)}
+function loadDay(){ // fill the Revenue boxes with what is already saved for that store and period
+  const d=$("sDate").value,e=$("sEnd").value||d,s=$("sStore").value;setTimeout(()=>revAllMode(!s),0);
+  D.channels.forEach((c,i)=>{const L=D.sales.filter(x=>inPeriod(x,d,e,s)&&x.channel===c.name);
+    let g="",n="";
+    if(L.length===1){g=L[0].gross;n=hasNet(L[0])?L[0].net:""}
+    else if(L.length>1){g=r2(L.reduce((t,x)=>t+num(x.gross),0));n=L.every(hasNet)?r2(L.reduce((t,x)=>t+num(x.net),0)):""}
+    $("sc"+i).value=g;$("sn"+i).value=n;$("sc"+i).dataset.o=g;$("sn"+i).dataset.o=n;$("sc"+i).dataset.k=L.length;vatBox(i,L.length?r2(L.reduce((t,x)=>t+rvat(x),0)):"");
+    const box=$("sc"+i).closest(".chbox");let nt=box.querySelector(".mnote");if(!nt){nt=document.createElement("div");nt.className="mnote";box.appendChild(nt)}
+    nt.textContent=!s?(L.length?`All locations combined — ${L.length} entr${L.length===1?"y":"ies"}`:""):L.length>1?`Total of ${L.length} entries — changing it replaces them with one entry for these dates`:""})}
+function revAllMode(on){D.channels.forEach((c,i)=>["sc","sn","sv"].forEach(k=>{const el=$(k+i);if(el){el.readOnly=on;el.classList.toggle("ro",on);if(el.value!==""&&(on||String(el.dataset.o??"")===String(el.value))){el.value=num(el.value).toFixed(2);el.dataset.o=el.value}}}));if(on)setTimeout(sDirty,0);
+  ["sAdd","sSaveAll"].forEach(id=>{const b=$(id);if(b){b.disabled=false;b.title=on?"Pick one location to add or change figures":""}});
+  if($("sNotes"))$("sNotes").disabled=on;let bn=$("revAllNote");if(!bn){bn=document.createElement("div");bn.id="revAllNote";bn.className="allnote";$("sChans").before(bn)}
+  bn.style.display=on?"":"none";bn.innerHTML="<b>All Locations</b> — showing every location added together (read only). Pick one location to add or change figures."}
+$("sDate").onchange=()=>{if(!$("sEnd").value||$("sEnd").value<$("sDate").value)$("sEnd").value=$("sDate").value;pushPeriod($("sDate").value,$("sEnd").value,$("sStore").value);loadDay();renderSalesLog()};
+$("sEnd").onchange=()=>{if($("sEnd").value<$("sDate").value)$("sEnd").value=$("sDate").value;pushPeriod($("sDate").value,$("sEnd").value,$("sStore").value);loadDay();renderSalesLog()};
+$("sStore").onchange=()=>{pushPeriod(null,null,$("sStore").value);loadDay();renderSalesLog()};
+function saveRevenue(quiet){const d=$("sDate").value,e=$("sEnd").value||d,s=$("sStore").value;if(!s){if(!quiet)toast("Pick one location to add or change figures");return quiet?0:-1}if(!d){toast("Pick a start date");return -1}
+  if(e<d){toast("End date is before start date");return -1}let bad="";
+  D.channels.forEach((c,i)=>{const v=$("sc"+i).value,nv=$("sn"+i).value;if(v!==""&&nv==="")bad=bad||(c.name+": please enter the Net £ (excl. VAT)");if(v===""&&nv!=="")bad=bad||(c.name+": please enter the Gross £");if(v!==""&&nv!==""&&num(nv)>num(v))bad=bad||(c.name+": Net can't be more than Gross")});
+  D.channels.forEach((c,i)=>{if($("sv"+i)&&$("sv"+i).value!==""&&num($("sv"+i).value)<0)bad=bad||(c.name+": VAT can't be negative")});
+  if(bad){toast(bad);return -1}
+  // work out what changes: cleared boxes delete that channel's entries in the period; changed boxes replace them
+  const plan=D.channels.map((c,i)=>{const v=$("sc"+i).value,nv=$("sn"+i).value,L=D.sales.filter(x=>inPeriod(x,d,e,s)&&x.channel===c.name);
+    if(v===""&&nv==="")return{c,act:L.length?"clear":"none",L};
+    const vv=$("sv"+i).value,same=String(v)===String($("sc"+i).dataset.o)&&String(nv)===String($("sn"+i).dataset.o)&&String(vv)===String($("sv"+i).dataset.o??"");
+    if(L.length&&same)return{c,act:"none",L};
+    return{c,act:L.length?"replace":"add",L,v,nv,vv}});
+  const mrg=plan.filter(p=>p.act==="replace"&&p.L.length>1);
+  if(mrg.length&&!confirm(`${mrg.map(p=>p.c.name+" ("+p.L.length+" entries)").join(", ")} will be merged into ONE entry for ${ukd(d)}${e!==d?" – "+ukd(e):""}.\n\nTo change a single day instead, pick that day or use Edit on its row in the Sales log. Continue?`))return -1;
+  const clr=plan.filter(p=>p.act==="clear"),cnt=clr.reduce((t,p)=>t+p.L.length,0);
+  if(cnt&&!confirm(`Clear ${clr.map(p=>p.c.name).join(", ")} for ${s}, ${ukd(d)}${e!==d?" – "+ukd(e):""}?\n\n${cnt} entr${cnt===1?"y":"ies"} will be removed from the Sales log.`))return -1;
+  let n=0;
+  plan.forEach(p=>{if(p.act==="none")return;
+    if(p.act==="clear"||p.act==="replace"){const ids=new Set(p.L.map(x=>x.id));D.sales=D.sales.filter(x=>!ids.has(x.id))}
+    if(p.act==="add"||p.act==="replace"){const keep=p.L.length===1&&p.L[0].date===d&&(p.L[0].end||p.L[0].date)===e?p.L[0]:null;
+      const auto=r2(num(p.v)-num(p.nv)),typed=p.vv!==""&&r2(num(p.vv))!==auto;
+      D.sales.push({id:keep?keep.id:uid(),date:d,end:e,store:s,channel:p.c.name,gross:num(p.v),net:num(p.nv),vatAmt:typed?r2(num(p.vv)):"",vatp:"",notes:$("sNotes").value||(keep?keep.notes:"")})}
+    n++});
+  if(n){save();$("sNotes").value=""}if(!quiet)toast(!n?"Nothing to change":cnt&&n===clr.length?"Revenue cleared":"Revenue saved");if(n)render();return n}
+$("sAdd").onclick=()=>{if(!$("sStore").value){toast("Pick one location first — then type the figures and click Add Revenue");const sel=$("sStore");sel.focus();sel.classList.add("pulse");setTimeout(()=>sel.classList.remove("pulse"),1600);return}saveRevenue();sDirty();setTimeout(fabState,50)};
+// Enter key in any Revenue box (gross, net, notes, dates, store) = Add revenue
+$("sales").querySelector(".card").addEventListener("keydown",e=>{
+  if(e.key!=="Enter"||e.isComposing||document.querySelector(".modal.on"))return;
+  if(!e.target.matches("input,select")||e.target.id==="sSearch")return;
+  e.preventDefault();e.target.blur();$("sAdd").classList.add("pressed");setTimeout(()=>$("sAdd").classList.remove("pressed"),150);$("sAdd").click()});
+/* Save changes (bottom of the Sales page): saves the Revenue boxes and any VAT % typed in the Sales log */
+function sPending(){let p=0;
+  D.channels.forEach((c,i)=>{const a=$("sc"+i),b=$("sn"+i);const vb=$("sv"+i);if(a&&(String(a.value)!==String(a.dataset.o??"")||String(b.value)!==String(b.dataset.o??"")||(vb&&String(vb.value)!==String(vb.dataset.o??""))))p++});
+  document.querySelectorAll("#tSales input[data-id]").forEach(el=>{if(String(el.value)!==String(el.dataset.o))p++});
+  if($("sNotes").value.trim())p++;return p}
+function sDirty(){const p=sPending(),t=$("sDirty");if(!t)return;t.textContent=p?"Unsaved changes":"All changes saved";t.style.color=p?"var(--amber)":"var(--mut)";t.style.fontWeight=p?"700":"400"}
+$("sSaveAll").onclick=()=>{let n=0;
+  document.querySelectorAll("#tSales input[data-id]").forEach(el=>{if(String(el.value)===String(el.dataset.o))return;const x=D.sales.find(r=>r.id===el.dataset.id);if(!x)return;
+    if(el.value===""){x.vatp=""}else{const v=num(el.value);if(v<0)return;x.vatp=v}n++});
+  if(n)save();
+  const r=saveRevenue(true);if(r<0){sDirty();return}
+  n+=r;if(n&&!r)render();toast(n?"All changes saved":"Nothing to save — no changes");sDirty()};
+document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest("#sales")&&e.target.id!=="sSearch")sDirty()});
+/* Clear: deletes the selected period's revenue (this store or all locations), empties the boxes and resets the dates — with Undo */
+const overlapSel=(x,d,e)=>x.date<=e&&(x.end||x.date)>=d;
+function clrScope(){return document.querySelector('input[name="clrScope"]:checked').value}
+function resetRevenueForm(){const t=today();$("sDate").value=t;$("sEnd").value=t;pushPeriod(t,t);
+  D.channels.forEach((c,i)=>{if($("sc"+i)){$("sc"+i).value="";$("sn"+i).value="";$("sv"+i).value="";$("sv"+i).dataset.m=""}});$("sNotes").value="";$("sSearch").value="";loadDay();renderSalesLog()}
+$("sClear").onclick=()=>{const d=$("sDate").value,e=$("sEnd").value||d,s=$("sStore").value;
+  const one=D.sales.filter(x=>x.store===s&&overlapSel(x,d,e)).length,all=D.sales.filter(x=>overlapSel(x,d,e)).length;
+  if(!all){resetRevenueForm();return toast("Nothing saved for those dates — form reset")}
+  $("clrWhen").textContent=ukd(d)+(e!==d?" – "+ukd(e):"");
+  $("clrOne").innerHTML=s?`<b>${esc(s)}</b> only — ${one} entr${one===1?"y":"ies"}`:"";$("clrOne").closest("label").style.display=s?"":"none";
+  $("clrAll").innerHTML=`<b>All locations</b> — ${all} entr${all===1?"y":"ies"}`;
+  document.querySelector('input[name="clrScope"][value="'+(s&&one?"one":"all")+'"]').checked=true;
+  $("clrModal").classList.add("on")};
+function closeClr(){$("clrModal").classList.remove("on")}
+let undoT=null,undoData=null;
+$("clrGo").onclick=()=>{const d=$("sDate").value,e=$("sEnd").value||d,s=$("sStore").value,sc=clrScope();
+  const gone=D.sales.filter(x=>(sc==="all"||x.store===s)&&overlapSel(x,d,e));
+  const ids=new Set(gone.map(x=>x.id));D.sales=D.sales.filter(x=>!ids.has(x.id));save();closeClr();
+  undoData={gone,d,e,s};$("undoBtn").onclick=undoClear;resetRevenueForm();render();
+  $("undoMsg").textContent=`Cleared ${gone.length} entr${gone.length===1?"y":"ies"} (${sc==="all"?"all locations":s}, ${ukd(d)}${e!==d?" – "+ukd(e):""})`;
+  $("undoBar").style.display="flex";clearTimeout(undoT);undoT=setTimeout(()=>{$("undoBar").style.display="none";undoData=null},10000)};
+function undoClear(){if(!undoData)return;D.sales.push(...undoData.gone);save();
+  $("sDate").value=undoData.d;$("sEnd").value=undoData.e;$("sStore").value=undoData.s;undoData=null;clearTimeout(undoT);$("undoBar").style.display="none";
+  render();toast("Restored")}
+$("undoBtn").onclick=undoClear;
+/* Delete a whole row from the Sales log (with Undo for 10 seconds) */
+function delSale(id){const i=D.sales.findIndex(x=>x.id===id);if(i<0)return;const x=D.sales[i];
+  const btn=document.querySelector(`#tSales button.del[onclick*="${id}"]`);if(btn)btn.closest("tr").classList.add("gone");
+  setTimeout(()=>{D.sales.splice(D.sales.indexOf(x),1);save();render();
+    undoData=null;$("undoMsg").textContent=`Deleted ${x.store} · ${x.channel} · ${ukd(x.date)}${(x.end||x.date)!==x.date?" – "+ukd(x.end):""} · ${gbp(num(x.gross))}`;
+    $("undoBar").style.display="flex";clearTimeout(undoT);
+    $("undoBtn").onclick=()=>{D.sales.push(x);save();render();clearTimeout(undoT);$("undoBar").style.display="none";toast("Row restored");$("undoBtn").onclick=undoClear};
+    undoT=setTimeout(()=>{$("undoBar").style.display="none";$("undoBtn").onclick=undoClear},10000)},180)}
+function editSale(id){const x=D.sales.find(r=>r.id===id);pushPeriod(x.date,x.end||x.date,x.store);$("sDate").value=x.date;$("sEnd").value=x.end||x.date;$("sStore").value=x.store;loadDay();renderSalesLog();$("sNotes").value=x.notes||"";window.scrollTo(0,0);toast("Change the figures, then press Add Revenue")}
+function setRowVat(id,val){ // VAT % typed straight into the log
+  const x=D.sales.find(r=>r.id===id);if(!x)return;
+  if(val===""){x.vatp="";x.vatAmt="";}else{const v=num(val);if(v<0)return toast("VAT % can't be negative");x.vatp=v;x.vatAmt="";}
+  save();setTimeout(renderSales,0);toast("VAT updated — net stays exactly as entered")}
+// hover notes: any element with class "hastip" and a data-tip shows a small pop-up that follows the cursor
+(function(){const t=()=>document.getElementById("hoverTip");let cur=null;
+  const mv=e=>{const el=t();if(!el)return;const w=el.offsetWidth,h=el.offsetHeight;let x=e.clientX+14,y=e.clientY+16;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;el.style.left=x+"px";el.style.top=y+"px"};
+  document.addEventListener("mouseover",e=>{const h=e.target.closest&&e.target.closest(".hastip");if(h===cur)return;cur=h;const el=t();if(!el)return;
+    if(h){el.innerHTML=h.dataset.tip;el.classList.add("on");mv(e)}else el.classList.remove("on")});
+  document.addEventListener("mousemove",e=>{if(cur)mv(e)});})();
+function renderSales(){
+  pullPeriod("sDate","sEnd","sStore",true);
+  $("sChans").innerHTML=D.channels.map((c,i)=>`<div class="chbox"><b>${esc(c.name)}</b>
+    <label><span class="lblrow"><span>Gross £ (incl. VAT)</span><span class="ibadge hastip" data-tip="${esc(grossTip(c.name))}">i</span></span><input type="number" step="0.01" id="sc${i}" style="width:100%" oninput="vatBox(${i})"></label>
+    <label><span class="lblrow"><span>Net £ (excl. VAT)</span><span class="ibadge hastip" data-tip="${esc(netTip(c.name))}">i</span></span><input type="number" step="0.01" id="sn${i}" style="width:100%" oninput="vatBox(${i})"></label>
+    <label><span class="lblrow"><span>VAT £<span id="svp${i}" style="display:none"></span></span><span class="ibadge hastip" data-tip="${esc(vatTip())}">i</span></span><input type="number" step="0.01" id="sv${i}" style="width:100%" oninput="vatTyped(${i})" placeholder="auto: Gross − Net"></label>
+    <label>Total £ (Net − VAT)<output id="st${i}" class="chtot"></output></label></div>`).join("")+`<div class="chbox totbox"><b>Total</b>
+    <label><span class="lblrow"><span>Gross £ (incl. VAT)</span><span class="ibadge hastip" data-tip="${esc(grossTip(null,true))}">i</span></span><output id="tG"></output></label>
+    <label><span class="lblrow"><span>Net £ (excl. VAT)</span><span class="ibadge hastip" data-tip="${esc(netTip(null,true))}">i</span></span><output id="tN"></output></label>
+    <label><span class="lblrow"><span>VAT £<span id="tVp" style="display:none"></span></span><span class="ibadge hastip" data-tip="${esc(vatTip(true))}">i</span></span><output id="tV"></output></label>
+    <label>Total £ (Net − VAT)<output id="tT" class="grand"></output></label>
+    <div class="mnote" style="color:var(--mut)">All channels added together</div></div>`;
+  if(!$("sEnd").value)$("sEnd").value=$("sDate").value;loadDay();renderSalesLog()}
+function salesView(){const a=$("sDate").value,b=$("sEnd").value||a,st=$("sStore").value,q=$("sSearch").value.toLowerCase();
+  return D.sales.filter(x=>(!st||x.store===st)&&(!a||(x.date<=b&&(x.end||x.date)>=a))&&(!q||JSON.stringify(x).toLowerCase().includes(q)))}
+
+/* ----- Sales detail drop-down ----- */
+let sdMode="net";
+function renderSalesDetail(){const w=$("sdWrap");if(!w)return;
+  const a=$("sDate").value,b=$("sEnd").value||a,st=$("sStore").value,CH=D.channels.map(c=>c.name);
+  if(!a){w.innerHTML='<p class="hint">Pick a start date and end date above.</p>';$("sum_sd").innerHTML="";return}const stN=st||"All Locations";
+  const L=D.sales.filter(x=>inPeriod(x,a,b,st)),g={};
+  for(let d=a;d<=b;d=addD(d,1))g[d+"|"+d]={d,e:d,by:{}};
+  L.forEach(x=>{const k=x.date+"|"+(x.end||x.date);const r=g[k]||(g[k]={d:x.date,e:x.end||x.date,by:{}});
+    const c=r.by[x.channel]||(r.by[x.channel]={gross:0,net:0,vat:0,n:0});c.gross+=num(x.gross);c.net+=rnet(x);c.vat+=rvat(x);c.n++});
+  const rows=Object.values(g).sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:p.e<q.e?-1:1);
+  const val=(c,m)=>!c?null:m==="total"?c.net-c.vat:c[m];
+  const T={by:{}},tot={gross:0,net:0,vat:0};let days=0;
+  rows.forEach(r=>{let any=false;r.t={gross:0,net:0,vat:0};CH.forEach(ch=>{const c=r.by[ch];if(!c)return;any=true;["gross","net","vat"].forEach(k=>{r.t[k]+=c[k];tot[k]+=c[k]});
+    const t=T.by[ch]||(T.by[ch]={gross:0,net:0,vat:0});["gross","net","vat"].forEach(k=>t[k]+=c[k])});r.any=any;if(any)days++});
+  const f=v=>v===null||v===undefined?'<span class="sddash">—</span>':gbp(r2(v));
+  const lab=r=>r.d===r.e?`<b>${DN[parse(r.d).getDay()]}</b> ${ukd(r.d)}`:`<b>${DN[parse(r.d).getDay()]}</b> ${ukd(r.d).slice(0,5)} → <b>${DN[parse(r.e).getDay()]}</b> ${ukd(r.e)}`;
+  const mName={gross:"Gross",net:"Net",vat:"VAT",total:"Total"}[sdMode];
+  let h=`<table class="sdtbl"><thead><tr><th class="sdc">Date</th>${CH.map(c=>`<th class="n">${esc(c)}<small>${mName}</small></th>`).join("")}<th class="n sdsep">Gross<small>incl. VAT</small></th><th class="n">Net<small>excl. VAT</small></th><th class="n">VAT</th><th class="n sdtot">Total<small>Net − VAT</small></th></tr>
+    <tr class="sdfrz"><th class="sdc">Period Total</th>${CH.map(c=>`<th class="n">${f(val(T.by[c],sdMode))}</th>`).join("")}<th class="n sdsep">${gbp(r2(tot.gross))}</th><th class="n">${gbp(r2(tot.net))}</th><th class="n">${gbp(r2(tot.vat))}</th><th class="n sdtot">${gbp(r2(tot.net-tot.vat))}</th></tr></thead><tbody>`;
+  rows.forEach(r=>{const we=[0,6].includes(parse(r.d).getDay())&&r.d===r.e;
+    h+=`<tr class="${r.any?"":"sdempty"}${we?" sdwe":""}" data-a="${r.d}" data-b="${r.e}"><td class="sdc">${lab(r)}</td>${CH.map(ch=>`<td class="n">${f(val(r.by[ch],sdMode))}</td>`).join("")}`+
+      (r.any?`<td class="n sdsep">${gbp(r2(r.t.gross))}</td><td class="n">${gbp(r2(r.t.net))}</td><td class="n">${gbp(r2(r.t.vat))}</td><td class="n sdtot">${gbp(r2(r.t.net-r.t.vat))}</td>`:`<td class="n sdsep"><span class="sddash">—</span></td><td class="n"><span class="sddash">—</span></td><td class="n"><span class="sddash">—</span></td><td class="n sdtot"><span class="sddash">—</span></td>`)+`</tr>`});
+  w.innerHTML=h+"</tbody></table>";
+  const nd=rows.filter(r=>r.d===r.e).length;
+  $("sdInfo").innerHTML=`${esc(stN)} · ${ukd(a)} – ${ukd(b)} · sales on ${days} of ${rows.length} ${rows.length===1?"day":"days"}`;
+  $("sum_sd").innerHTML=`${esc(stN)} · Net <b>${gbp(r2(tot.net))}</b> · ${nd} day${nd===1?"":"s"}`}
+$("sdSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;sdMode=b.dataset.m;$("sdSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderSalesDetail()};
+$("sdWrap").onclick=e=>{const tr=e.target.closest("tbody tr[data-a]");if(!tr)return;$("sDate").value=tr.dataset.a;$("sEnd").value=tr.dataset.b;
+  pushPeriod(tr.dataset.a,tr.dataset.b,$("sStore").value);loadDay();renderSalesLog();window.scrollTo({top:0,behavior:"smooth"});toast("Opened "+ukd(tr.dataset.a)+(tr.dataset.a===tr.dataset.b?"":" – "+ukd(tr.dataset.b))+" in Revenue")};
+
+function renderSalesLog(){ // only entries that fall in the Start–End dates picked above
+  setTimeout(sDirty,0);setTimeout(renderSalesDetail,0);
+  const a=$("sDate").value,b=$("sEnd").value||a,st=$("sStore").value,inSel=x=>(!st||x.store===st)&&(!a||(x.date<=b&&(x.end||x.date)>=a));
+  $("sLogTitle").textContent="Sales Log";
+  const q=$("sSearch").value.toLowerCase();
+  const rows=D.sales.filter(x=>inSel(x)&&(!q||JSON.stringify(x).toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||a.store.localeCompare(b.store));
+  // (COGS share per row kept for reference)
+  // shared across that store's channels for the same dates in proportion to net sales.
+  const cogsMap={};
+  D.purchases.forEach(p=>{const cov=D.sales.filter(x=>x.store===p.store&&x.date<=p.date&&(x.end||x.date)>=p.date),t=cov.reduce((a,x)=>a+rnet(x),0);
+    if(t>0)cov.forEach(x=>cogsMap[x.id]=(cogsMap[x.id]||0)+num(p.amount)*rnet(x)/t)});
+  const rowCogs=x=>r2(cogsMap[x.id]||0);
+  let G=0,N=0,P=0,V=0;
+  if(!rows.length){$("tSales").innerHTML=`<p style="text-align:center;color:var(--mut);padding:26px 0;margin:0">No revenue entered for ${st?esc(st)+", ":""}${a?ukd(a)+(b!==a?" – "+ukd(b):""):"this period"}${q?" matching “"+esc(q)+"”":""}.</p>`;return}
+  $("tSales").innerHTML=table([{t:"Start Date"},{t:"End Date"},{t:"Location"},{t:"Channel"},{t:"Gross Sales (incl. VAT)",n:1},{t:"Net Sales (excl. VAT)",n:1},{t:"VAT %",n:1},{t:"VAT £",n:1},{t:"Actions"}],
+    rows.slice(0,1000).map(x=>{const g=num(x.gross),n=rnet(x),man=hasNet(x),vt=rvat(x);G+=g;N+=n;V+=vt;
+      const vp=rvatShow(x);
+      return[ukd(x.date),ukd(x.end||x.date),esc(x.store),esc(x.channel),gbp(g),
+        man?gbpX(n):`<span style="color:var(--mut)" title="Old entry with no net typed — click ✎ to enter it">${gbp(n)}*</span>`,
+        `<input type="number" step="0.01" value="${vp}" style="width:80px;text-align:right${hasVp(x)?";font-weight:700":";color:var(--mut)"}" title="Type a VAT % and press Enter" data-id="${x.id}" data-o="${vp}" oninput="sDirty()" onchange="setRowVat('${x.id}',this.value)">`,
+        gbp(vt),
+        `<span style="display:inline-flex;gap:6px"><button class="rbtn" onclick="editSale('${x.id}')">Edit</button><button class="rbtn del" onclick="delSale('${x.id}')">Delete</button></span>`]}),
+    rows.length?["Total ("+rows.length+")","","","",gbp(r2(G)),gbp(r2(N)),N?String(r2(V/N*100)):"–",gbp(r2(V)),""]:null)+
+    `<p class="hint">Net is always exactly what you typed in Revenue. VAT £ is Gross − Net unless you typed your own VAT £ in Revenue; VAT % = VAT £ ÷ Net. Type a VAT % on a row and press Enter to override it (VAT £ = Net × that %); clear it to go back.</p>`+
+    
+    (rows.some(x=>!hasNet(x))?`<p class="hint">* grey = older entry saved without a net, so it was worked out at ${D.vat}%. Click ✎ to type the real net.</p>`:"");}
+$("sSearch").oninput=renderSalesLog;
+
+/* ---------- purchases ---------- */
+/* ===== Shared day-by-day sheet engine: COGS (wk) and Overheads (oh) ===== */
+const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MNL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const IMG='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+const SH={
+  wk:{dates:true,title:"Supplier Sheet",one:"Supplier",many:"suppliers",all:"All Suppliers",codeP:"SUP-",file:"Suppliers",inv:"inv",src:"week",field:"supplier",
+      list:()=>D.suppliers,rows:()=>D.purchases,setRows:a=>D.purchases=a,feeds:"the Dashboard COGS and Net profit",
+      make:(st,name,d,amt)=>({id:uid(),date:d,end:d,store:st,supplier:name,inv:"",amount:amt,paid:"No",notes:"Supplier sheet",file:"",src:"week"})},
+  oh:{dates:true,title:"Overheads Sheet",one:"Category",many:"categories",all:"All Categories",codeP:"OH-",file:"Overheads",inv:"ohinv",src:"sheet",field:"cat",
+      list:()=>D.ohcats,rows:()=>D.overheads,setRows:a=>D.overheads=a,feeds:"the Dashboard Overheads and Net profit",
+      make:(st,name,d,amt)=>({id:uid(),date:d,end:d,store:st,cat:name,desc:"Overheads sheet",amount:amt,src:"sheet"})}
+};
+function sheetHTML(p){const c=SH[p];return `<div class="card noprint"><h2>${c.title}</h2>
+  <div class="row">
+    ${c.dates?`<label>Start date<input type="date" id="${p}Start"></label><label>End date<input type="date" id="${p}End"></label><span style="display:none">`:""}
+    <label>Month<select id="${p}Mon">${MN.map((m,i)=>`<option value="${i}">${MNL[i]}</option>`).join("")}</select></label>
+    <label>Year<select id="${p}Yr"></select></label>
+    ${c.dates?"</span>":`<input type="hidden" id="${p}Start"><input type="hidden" id="${p}End">`}
+    <label>Location<select id="${p}Store"></select></label>
+    <label>${c.one}<select id="${p}Sel"></select></label>
+    <label${c.dates?' style="display:none"':""}>View<select id="${p}View"><option value="d">Daily (Mon–Sun)</option><option value="w">Monthly (4 weeks)</option><option value="m">Yearly (12 months)</option></select></label>
+    <label id="${p}WkL"${c.dates?' style="display:none!important"':""}>Week<select id="${p}Wk"></select></label>
+    <button class="b sm" onclick="openItems('${p}')">+ Add / Edit ${c.many[0].toUpperCase()+c.many.slice(1)}</button>
+    <button class="b g sm" onclick="sShift('${p}',-1)">‹ Previous</button><button class="b g sm" onclick="sShift('${p}',1)">Next ›</button>
+  </div>
+  <div class="tw" id="${p}Grid" style="margin-top:12px;max-height:none"></div>
+  <div class="row" style="margin-top:12px;justify-content:space-between">
+    <div class="row" style="display:none"><span style="font-size:12px;color:var(--mut)">Export:</span><button class="b g sm" onclick="sExport('${p}','csv')">CSV</button><button class="b g sm" onclick="sExport('${p}','xlsx')">Excel</button></div>
+    <button class="b" id="${p}Save" onclick="sSave('${p}')" style="display:none">Save</button></div>
+  <p class="hint">${c.dates?"Pick a Start date and End date (up to 31 days) — one column per day; Previous / Next move by the same number of days. The Total column on the right adds up each row.":"Pick the Month and Year, then the View: <b>Daily</b> = one Monday–Sunday week (choose it in Week) · <b>Monthly</b> = 4 weeks of the month (Week 4 runs from the 22nd to the month end) · <b>Yearly</b> = 12 months, Jan–Dec. The Total column on the right adds up each row."} Each box shows the total for that period. Typing a new amount in a Weekly/Monthly box replaces that period's amounts with one entry dated the first day of the period. Amounts are ex VAT. Click the small image icon next to a box to attach that day's invoice, then preview or download it (a green icon = invoice attached). Save stores the amounts — they feed ${c.feeds}.</p>
+</div>`}
+const sMode=p=>$(p+"View").value||"d";
+const addD=(d,n)=>{const x=parse(d);x.setDate(x.getDate()+n);return iso(x)};
+const monthEnd=d=>{const x=parse(d);return iso(new Date(x.getFullYear(),x.getMonth()+1,0))};
+const addM=(d,n)=>{const x=parse(d);return iso(new Date(x.getFullYear(),x.getMonth()+n,1))};
+function sPeriods(p){const m=sMode(p),s0=$(p+"Start").value,e0=$(p+"End").value;if(!s0)return[];const out=[];
+  if(m==="d"){for(let d=s0;d<=e0;d=addD(d,1))out.push({from:d,to:d,h:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][parse(d).getDay()],sub:ukd(d).slice(0,5),lab:DN[parse(d).getDay()]+" "+ukd(d)})}
+  else if(m==="w"){const y=s0.slice(0,8);[[1,7],[8,14],[15,21],[22,0]].forEach(([a,b],i)=>{const f=y+String(a).padStart(2,"0"),t=b?y+String(b).padStart(2,"0"):e0;
+    out.push({from:f,to:t,h:"Week "+(i+1),sub:ukd(f).slice(0,5)+"–"+ukd(t).slice(0,5),lab:"Week "+(i+1)+" ("+ukd(f)+" – "+ukd(t)+")"})})}
+  else{for(let d=s0;d<=e0;d=addM(d,1)){const x=parse(d);out.push({from:d,to:monthEnd(d),h:MN[x.getMonth()],sub:String(x.getFullYear()),lab:MN[x.getMonth()]+" "+x.getFullYear()})}}
+  return out}
+function sYears(p){const now=new Date().getFullYear(),ys=new Set();for(let y=now-3;y<=now+3;y++)ys.add(y);
+  [...D.sales,...D.purchases,...D.overheads].forEach(x=>{if(x.date)ys.add(+x.date.slice(0,4))});
+  const sel=$(p+"Yr"),v=sel.value||String(now);sel.innerHTML=[...ys].sort().map(y=>`<option>${y}</option>`).join("");sel.value=v}
+function sWeeks(p,want){ // Monday–Sunday weeks that touch the chosen month
+  const y=+$(p+"Yr").value,mo=+$(p+"Mon").value,f=iso(new Date(y,mo,1)),l=monthEnd(f),sel=$(p+"Wk"),v=want||sel.value,ws=[];
+  for(let w=iso(monday(parse(f)));w<=l;w=addD(w,7))ws.push(w);
+  sel.innerHTML=ws.map(w=>`<option value="${w}">${ukd(w).slice(0,5)} – ${ukd(addD(w,6)).slice(0,5)}</option>`).join("");
+  const t=iso(monday(new Date()));sel.value=ws.includes(v)?v:ws.includes(t)?t:ws[0]}
+function sFix(p){if(SH[p].dates){ // free Start–End dates (up to 31 days)
+    if(!$(p+"Start").value)$(p+"Start").value=iso(monday(new Date()));
+    if(!$(p+"End").value||$(p+"End").value<$(p+"Start").value)$(p+"End").value=addD($(p+"Start").value,6);
+    const mx=addD($(p+"Start").value,30);if($(p+"End").value>mx){$(p+"End").value=mx;toast("Maximum 31 days at a time")}
+    $(p+"View").value="d";$(p+"WkL").style.display="none";return}
+  const m=sMode(p);if($(p+"Yr").options.length===0)sYears(p);
+  const y=+$(p+"Yr").value,mo=+$(p+"Mon").value;
+  $(p+"Mon").disabled=m==="m";$(p+"Mon").style.opacity=m==="m"?.45:1;$(p+"WkL").style.display=m==="d"?"":"none";
+  if(m==="m"){$(p+"Start").value=y+"-01-01";$(p+"End").value=y+"-12-31"}
+  else if(m==="w"){const st=iso(new Date(y,mo,1));$(p+"Start").value=st;$(p+"End").value=monthEnd(st)}
+  else{sWeeks(p);const w=$(p+"Wk").value;$(p+"Start").value=w;$(p+"End").value=addD(w,6)}}
+const sList=p=>{const f=$(p+"Sel").value;return SH[p].list().filter(s=>!f||s.name===f)};
+function sTot(p){const days=sPeriods(p);let G=0;const col=days.map(()=>0);
+  sList(p).forEach((it,r)=>{let t=0;days.forEach((d,c)=>{const v=num($(p+"_"+r+"_"+c).value);t+=v;col[c]+=v});$(p+"r"+r).textContent=gbp(t);G+=t});
+  col.forEach((v,c)=>$(p+"c"+c).textContent=gbp(v));$(p+"g").textContent=gbp(G)}
+const fKey=(p,st,name,d)=>SH[p].inv+"|"+st+"|"+name+"|"+d;
+function sMarks(p){if(!idb)return;const st=$(p+"Store").value;
+  document.querySelectorAll("#"+p+"Grid .ib").forEach(b=>{getFile(fKey(p,st,b.dataset.s,b.dataset.d)).then(f=>b.classList.toggle("has",!!f))})}
+function sRender(p){
+  const c=SH[p];sFix(p);const per=sPeriods(p),st=$(p+"Store").value;
+  const allL=!st;const cell=(name,P)=>r2(c.rows().filter(x=>x.src===c.src&&(allL||x.store===st)&&x[c.field]===name&&x.date>=P.from&&x.date<=P.to).reduce((a,x)=>a+num(x.amount),0));
+  let h=`<table class="shtbl"><thead><tr><th class="shcode">Code</th><th>${c.one}</th>${per.map(P=>`<th class="dayh"><span class="dwrap"><span class="dbox" style="width:${sMode(p)==="d"?84:100}px"><span class="dname">${P.h}</span><span class="ddate">${P.sub}</span></span><span class="dgap"></span></span></th>`).join("")}<th class="n shtot">Total</th></tr></thead><tbody>`;
+  sList(p).forEach((it,r)=>{h+=`<tr><td>${esc(it.code)}</td><td>${esc(it.name)}</td>`+per.map((P,ci)=>{const v=cell(it.name,P);
+    return `<td class="n"><span style="display:inline-flex;align-items:center;gap:2px"><input type="number" step="0.01" id="${p}_${r}_${ci}" data-o="${v}" value="${v?num(v).toFixed(2):""}" oninput="sTot('${p}')" ${allL?'readonly class="ro" tabindex="-1"':""} style="width:${sMode(p)==="d"?84:100}px;text-align:right"><button class="ib${allL?" ibhide":""}" title="Invoice — attach / preview / download" data-s="${esc(it.name)}" data-d="${P.from}" data-l="${esc(P.lab)}" onclick="openInv('${p}',this)">${IMG}</button></span></td>`}).join("")+`<td class="n" id="${p}r${r}" style="font-weight:700;background:#eef5f4"></td></tr>`});
+  if(!sList(p).length)h+=`<tr><td colspan="${per.length+3}" style="color:var(--mut);text-align:center;padding:18px">No ${c.many} yet — click “+ Add / Edit ${c.many[0].toUpperCase()+c.many.slice(1)}”</td></tr>`;
+  h+=`<tr class="tot"><td></td><td>Total</td>${per.map((_,ci)=>`<td class="n" id="${p}c${ci}"></td>`).join("")}<td class="n" id="${p}g"></td></tr></tbody></table>`;
+  $(p+"Grid").innerHTML=(allL?`<div class="allnote"><b>All Locations</b> — every location added together (read only). Pick one location to enter amounts or attach invoices.</div>`:"")+h;sTot(p);if(!allL)sMarks(p);const sb=$(p+"Grid").closest("section")?.querySelector("[onclick^=\"sSave\"]");if(sb){sb.disabled=false}}
+function sShift(p,dir){if(SH[p].dates){const r=shiftRange($(p+"Start").value,$(p+"End").value,dir);$(p+"Start").value=r[0];$(p+"End").value=r[1];pushPeriod(r[0],r[1]);return sRender(p)}
+  const m=sMode(p);let y=+$(p+"Yr").value,mo=+$(p+"Mon").value,want=null;
+  if(m==="m")y+=dir;
+  else if(m==="w"){mo+=dir;if(mo<0){mo=11;y--}if(mo>11){mo=0;y++}}
+  else{want=addD($(p+"Wk").value,7*dir);const mid=parse(addD(want,3));y=mid.getFullYear();mo=mid.getMonth()}
+  if(![...$(p+"Yr").options].some(o=>+o.value===y))$(p+"Yr").insertAdjacentHTML(dir>0?"beforeend":"afterbegin",`<option>${y}</option>`);
+  $(p+"Yr").value=String(y);$(p+"Mon").value=String(mo);if(want)sWeeks(p,want);sRender(p)}
+function sSave(p){const c=SH[p],per=sPeriods(p),st=$(p+"Store").value;if(!st)return toast("Pick one location to save amounts");
+  let n=0,ch=0;
+  sList(p).forEach((it,r)=>per.forEach((P,ci)=>{const el=$(p+"_"+r+"_"+ci),v=r2(num(el.value)),o=r2(num(el.dataset.o));if(v)n++;
+    if(v===o)return; ch++;  // unchanged boxes keep their existing entries untouched
+    const inP=x=>x.src===c.src&&x.store===st&&x[c.field]===it.name&&x.date>=P.from&&x.date<=P.to;
+    c.setRows(c.rows().filter(x=>!inP(x)));
+    if(v)c.rows().push(c.make(st,it.name,P.from,v))}));
+  save();toast(ch?ch+" change"+(ch===1?"":"s")+" saved for "+st:"No changes to save");render()}
+
+/* ----- add / rename / remove suppliers or categories (also used by Settings) ----- */
+function nextCode(p){const L=SH[p].list(),n=L.reduce((m,s)=>Math.max(m,parseInt((s.code||"").replace(/\D/g,""))||0),0)+1;return SH[p].codeP+String(n).padStart(2,"0")}
+const SMALLW=["and","of","on","the","a","an","in","for","to","at","by","or","per"];
+function titleCase(t){return String(t||"").trim().replace(/\s+/g," ").split(" ").map((w,i)=>{if(/^[A-Z0-9&\/]+$/.test(w)&&w.length>1)return w;const l=w.toLowerCase();if(i>0&&SMALLW.includes(l))return l;return l.replace(/(^|[-\/(])([a-z])/g,(m,a,b)=>a+b.toUpperCase())}).join(" ")}
+function addItem(p,name,code){const c=SH[p],L=c.list();name=(name||"").trim();if(p==="oh")name=titleCase(name);code=(code||"").trim()||nextCode(p);
+  if(!name){toast("Type a "+c.one.toLowerCase()+" name");return false}
+  if(L.some(s=>s.name.toLowerCase()===name.toLowerCase())){toast(name+" already exists");return false}
+  if(L.some(s=>s.code.toLowerCase()===code.toLowerCase())){toast("Code "+code+" is already used");return false}
+  L.push({code,name});save();toast(name+" added");return true}
+function moveFiles(p,oldName,newName){if(!idb)return;const tx=idb.transaction("files","readwrite"),os=tx.objectStore("files");
+  os.openCursor().onsuccess=e=>{const cu=e.target.result;if(!cu)return;const k=String(cu.key),q=k.split("|");
+    if(q[0]===SH[p].inv&&q[2]===oldName){q[2]=newName;os.put(cu.value,q.join("|"));cu.delete()}cu.continue()}}
+function renameItem(p,i,field,val){const c=SH[p],L=c.list();val=(val||"").trim();if(p==="oh"&&field==="name")val=titleCase(val);const it=L[i];if(!it)return;
+  if(!val){toast("Can't be blank");return setTimeout(refreshItems,0)}
+  if(L.some((s,j)=>j!==i&&s[field].toLowerCase()===val.toLowerCase())){toast("That "+(field==="name"?"name":"code")+" is already used");return setTimeout(refreshItems,0)}
+  if(field==="name"&&val!==it.name){const old=it.name;c.rows().forEach(x=>{if(x[c.field]===old)x[c.field]=val});moveFiles(p,old,val);if($(p+"Sel").value===old)$(p+"Sel").value=val}
+  it[field]=val;save();toast(c.one+" updated");setTimeout(refreshItems,0)}
+let rmArm=null;
+function removeItem(p,i,btn){const c=SH[p],it=c.list()[i];if(!it)return;const key=p+"|"+it.name;
+  if(btn&&rmArm!==key){rmArm=key;document.querySelectorAll("button.x.arm").forEach(b=>{b.classList.remove("arm");b.textContent="✕"});
+    btn.classList.add("arm");btn.textContent="Remove?";setTimeout(()=>{if(rmArm===key){rmArm=null;if(btn.isConnected){btn.classList.remove("arm");btn.textContent="✕"}}},4000);return}
+  rmArm=null;const used=c.rows().filter(x=>x[c.field]===it.name).length;
+  c.list().splice(i,1);save();toast(it.name+" removed"+(used?" — its "+used+" saved amount"+(used===1?" stays":"s stay")+" in the totals":"")+" · ⌘Z to undo");refreshItems()}
+function itemTable(p,stats){const c=SH[p];
+  return table([{t:"Code"},{t:c.one+" Name"},...(stats?[{t:"Entries",n:1},{t:"Total",n:1}]:[]),{t:""}],c.list().map((s,i)=>{const e=c.rows().filter(x=>x[c.field]===s.name);
+    return[`<input value="${esc(s.code)}" style="width:100px" onchange="renameItem('${p}',${i},'code',this.value)">`,`<input value="${esc(s.name)}" style="width:${stats?260:200}px" onchange="renameItem('${p}',${i},'name',this.value)">`,
+      ...(stats?[e.length,gbp(e.reduce((a,x)=>a+num(x.amount),0))]:[]),`<button class="x" title="Remove" onclick="removeItem('${p}',${i},this)">✕</button>`]}))}
+let imP=null;
+function refreshItems(){if(imP&&$("itemModal").classList.contains("on"))$("imList").innerHTML=itemTable(imP,true);render()}
+function openItems(p){imP=p;const c=SH[p];$("imTitle").textContent=c.one==="Supplier"?"Suppliers":"Overhead Categories";$("imNameLbl").textContent=c.one+" Name";
+  $("imAdd").textContent="Add "+c.one;$("imCode").value="";$("imName").value="";$("imCode").placeholder="auto ("+nextCode(p)+")";
+  $("imHint").textContent=`Change a code or name and press Enter — every saved amount, sheet row, dropdown and attached invoice using it updates too. To remove one, click ✕ then “Remove?” to confirm — it hides it from the sheet; amounts already saved stay in the totals (⌘Z undoes).`;
+  $("imList").innerHTML=itemTable(p,true);$("itemModal").classList.add("on");setTimeout(()=>$("imName").focus(),50)}
+function closeItems(){$("itemModal").classList.remove("on")}
+function addItemUI(){if(addItem(imP,$("imName").value,$("imCode").value)){$("imCode").value="";$("imName").value="";$("imCode").placeholder="auto ("+nextCode(imP)+")";refreshItems()}}
+$("imName").addEventListener("keydown",e=>{if(e.key==="Enter")addItemUI()});
+
+/* ----- export the sheet as on screen (CSV / Excel .xlsx) — no internet or plugins needed ----- */
+function sData(p){const c=SH[p],days=sPeriods(p);
+  const head=["Code",c.one,...days.map(P=>P.lab),"Total"];
+  const col=days.map(()=>0);let G=0;
+  const rows=sList(p).map((it,r)=>{let t=0;const v=days.map((d,ci)=>{const x=r2(num($(p+"_"+r+"_"+ci).value));t+=x;col[ci]+=x;return x});G+=t;return[it.code,it.name,...v,r2(t)]});
+  rows.push(["","Day Total",...col.map(r2),r2(G)]);
+  const per=SH[p].dates?ukd($(p+"Start").value)+" to "+ukd($(p+"End").value):sMode(p)==="m"?$(p+"Yr").value:sMode(p)==="d"?"Week of "+ukd($(p+"Start").value):MNL[+$(p+"Mon").value]+" "+$(p+"Yr").value;
+  const title=`${c.title} (${{d:"Daily",w:"Monthly",m:"Yearly"}[sMode(p)]}) — ${$(p+"Store").value} — ${per}${$(p+"Sel").value?" — "+$(p+"Sel").value:""}`;
+  const fname=`${c.file}_${{d:"Daily",w:"Monthly",m:"Yearly"}[sMode(p)]}_${$(p+"Store").value}_${per}`.replace(/[^\w\-]+/g,"_");
+  return{head,rows,title,fname,sheet:c.file}}
+function crc32(b){let c,t=crc32.t;if(!t){t=crc32.t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}
+  c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=t[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zip(files){const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>>24&255];
+  files.forEach(f=>{const nm=enc.encode(f.name),dt=enc.encode(f.data),cr=crc32(dt);
+    const h=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(cr),...u32(dt.length),...u32(dt.length),...u16(nm.length),...u16(0)]);
+    parts.push(h,nm,dt);
+    cen.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(cr),...u32(dt.length),...u32(dt.length),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nm);
+    off+=h.length+nm.length+dt.length});
+  const cs=cen.reduce((a,x)=>a+x.length,0);
+  return new Blob([...parts,...cen,new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cs),...u32(off),0,0])],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
+function xlsx(title,head,rows,sheet,secs){
+  const x=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const colL=i=>{let s="";i++;while(i){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26}return s};
+  const cell=(v,r,c,st)=>typeof v==="number"?`<c r="${colL(c)}${r}" s="${st||2}"><v>${v}</v></c>`:`<c r="${colL(c)}${r}" t="inlineStr" s="${st||0}"><is><t>${x(v)}</t></is></c>`;
+  let sd,cols;
+  if(secs){let r=1;sd=`<row r="1">${cell(title,1,0,3)}</row>`;r=3;let maxC=1;
+    secs.forEach(S=>{maxC=Math.max(maxC,S.head.length);sd+=`<row r="${r}">${cell(S.name,r,0,1)}</row>`;r++;
+      sd+=`<row r="${r}">${S.head.map((h,c)=>cell(h,r,c,1)).join("")}</row>`;r++;
+      S.rows.forEach((row,i)=>{const t=S.tot&&S.tot[i];sd+=`<row r="${r}">${row.map((v,c)=>cell(v,r,c,t?(typeof v==="number"?4:1):undefined)).join("")}</row>`;r++});r++});
+    cols=`<cols><col min="1" max="1" width="28" customWidth="1"/><col min="2" max="${Math.max(maxC,2)}" width="18" customWidth="1"/></cols>`}
+  else{sd=`<row r="1">${cell(title,1,0,3)}</row><row r="3">${head.map((h,c)=>cell(h,3,c,1)).join("")}</row>`;
+  rows.forEach((r,i)=>{const last=i===rows.length-1;sd+=`<row r="${i+4}">${r.map((v,c)=>cell(v,i+4,c,last?(typeof v==="number"?4:1):undefined)).join("")}</row>`});
+  cols=`<cols><col min="1" max="1" width="10" customWidth="1"/><col min="2" max="2" width="26" customWidth="1"/><col min="3" max="${head.length}" width="15" customWidth="1"/></cols>`}
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;£&quot;#,##0.00"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font><font><b/><sz val="14"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFA9C6C1"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="5"><xf fontId="0"/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/><xf fontId="0" numFmtId="164" applyNumberFormat="1"/><xf fontId="2" applyFont="1"/><xf fontId="1" fillId="2" numFmtId="164" applyFont="1" applyFill="1" applyNumberFormat="1"/></cellXfs></styleSheet>`;
+  return zip([
+    {name:"[Content_Types].xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
+    {name:"_rels/.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:"xl/workbook.xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${x(sheet||"Sheet1")}" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+    {name:"xl/_rels/workbook.xml.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:"xl/styles.xml",data:styles},
+    {name:"xl/worksheets/sheet1.xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${cols}<sheetData>${sd}</sheetData></worksheet>`}])}
+function sExport(p,kind){const{head,rows,title,fname,sheet}=sData(p);
+  if(kind==="csv"){const q=v=>{v=String(v??"");return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+    download(fname+".csv","﻿"+[[title],head,...rows].map(r=>r.map(q).join(",")).join("\n"),"text/csv");return toast("CSV downloaded")}
+  const a=document.createElement("a");a.href=URL.createObjectURL(xlsx(title,head,rows,sheet));a.download=fname+".xlsx";document.body.appendChild(a);a.click();a.remove();toast("Excel file downloaded")}
+
+/* ----- daily invoice popup (shared) ----- */
+let invCur=null,invUrl=null;
+function openInv(p,btn){invCur={p,st:$(p+"Store").value,s:btn.dataset.s,d:btn.dataset.d,btn};
+  $("invTitle").textContent=invCur.s+" — "+(btn.dataset.l||ukd(invCur.d))+" — "+invCur.st;$("invModal").classList.add("on");showInv()}
+const curKey=()=>fKey(invCur.p,invCur.st,invCur.s,invCur.d);
+async function showInv(){if(invArm&&invArm!==curKey())invDisarm();const f=await getFile(curKey());if(invUrl){URL.revokeObjectURL(invUrl);invUrl=null}
+  if(!f){$("invBody").innerHTML=`<p style="color:var(--mut);text-align:center;padding:30px 0">No invoice attached for this day yet.<br>Click <b>Upload Invoice</b> to add a photo or PDF.</p>`;$("invDl").disabled=$("invDel").disabled=true;invCur.btn.classList.remove("has");return}
+  invUrl=URL.createObjectURL(f.blob);$("invDl").disabled=$("invDel").disabled=false;invCur.btn.classList.add("has");
+  $("invBody").innerHTML=`<p class="hint" style="margin:0 0 8px">${esc(f.name)}</p>`+(f.type.startsWith("image/")?`<img src="${invUrl}">`:f.type==="application/pdf"?`<iframe src="${invUrl}"></iframe>`:`<p>Preview not available — use Download.</p>`)}
+function closeInv(){invDisarm();$("invModal").classList.remove("on");if(invUrl){URL.revokeObjectURL(invUrl);invUrl=null}}
+$("invFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f||!invCur)return;
+  if(await putFile(curKey(),f)){toast("Invoice attached");showInv()}else toast("Couldn't save the file in this browser")};
+$("invDl").onclick=async()=>{const f=await getFile(curKey());if(!f)return;const a=document.createElement("a");a.href=URL.createObjectURL(f.blob);a.download=f.name;document.body.appendChild(a);a.click();a.remove()};
+let invArm=null;
+function invDisarm(){invArm=null;const b=$("invDel");b.classList.remove("arm");b.textContent="Remove"}
+$("invDel").onclick=async()=>{if(!invCur)return;const k=curKey();
+  if(invArm!==k){invArm=k;const b=$("invDel");b.classList.add("arm");b.textContent="Confirm Remove?";setTimeout(()=>{if(invArm===k)invDisarm()},4000);return}
+  invDisarm();const ok=await delFile(k);await showInv();toast(ok?"Invoice removed":"Couldn't remove the file in this browser")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeInv();closeItems();closeClr()}});
+
+/* build both sheets */
+["wk","oh"].forEach(p=>{$(p+"Card").innerHTML=sheetHTML(p);
+  const n=new Date();sYears(p);$(p+"Yr").value=String(n.getFullYear());$(p+"Mon").value=String(n.getMonth());
+  $(p+"Mon").onchange=()=>{$(p+"Wk").value="";sRender(p)};$(p+"Yr").onchange=()=>{$(p+"Wk").value="";sRender(p)};
+  if(SH[p].dates){$(p+"Start").onchange=()=>{if($(p+"End").value<$(p+"Start").value)$(p+"End").value=$(p+"Start").value;pushPeriod($(p+"Start").value,$(p+"End").value);sRender(p)};$(p+"End").onchange=()=>{pushPeriod($(p+"Start").value,$(p+"End").value);sRender(p)}}
+  $(p+"Store").onchange=()=>{pushPeriod(null,null,$(p+"Store").value);sRender(p)};$(p+"View").onchange=()=>sRender(p);$(p+"Wk").onchange=()=>sRender(p);$(p+"Sel").onchange=()=>sRender(p)});
+function renderPur(){pullPeriod("wkStart","wkEnd","wkStore",true);sRender("wk")}
+
+function togPaid(id){const r=D.purchases.find(x=>x.id===id);r.paid=r.paid==="Yes"?"No":"Yes";save();render()}
+
+/* ---------- rota ---------- */
+// Previous/Next: whole calendar months move month by month; any other range moves by its own length
+function shiftRange(a,b,dir){const whole=a.slice(8)==="01"&&b===monthEnd(a.slice(0,8)+"01")&&a.slice(0,7)===b.slice(0,7);
+  if(whole){const st=addM(a,dir);return[st,monthEnd(st)]}const n=spanDays(a,b);return[addD(a,dir*n),addD(b,dir*n)]}
+function lSet(){ // Start–End dates picked on the calendars (default: this month)
+  if(!$("lStart").value){const n=new Date();$("lStart").value=iso(new Date(n.getFullYear(),n.getMonth(),1));$("lEnd").value=iso(new Date(n.getFullYear(),n.getMonth()+1,0))}
+  if(!$("lEnd").value||$("lEnd").value<$("lStart").value)$("lEnd").value=$("lStart").value;
+  $("lRange").textContent=""}
+function lShift(dir){const r=shiftRange($("lStart").value,$("lEnd").value,dir);pushPeriod(r[0],r[1]);renderLabSum()}
+function renderLabSum(){
+  pullPeriod("lStart","lEnd","lStore",true);lSet();
+  const a=$("lStart").value,b=$("lEnd").value,inR=d=>d>=a&&d<=b,st=$("lStore").value,stores=st?[st]:D.stores;
+  const rows=stores.map(s=>{let h=0;D.rota.filter(x=>x.store===s).forEach(x=>{h+=hrsIn(x,inR)});
+    const c=labourCost(s,a,b),man=D.labCost.find(x=>x.store===s&&x.from===a&&x.to===b);
+    const n=D.sales.filter(x=>x.store===s&&inR(x.date)).reduce((t,x)=>t+rnet(x),0);return{s,h,c,n,man}});
+  const T=rows.reduce((t,r)=>({h:t.h+r.h,c:t.c+r.c,n:t.n+r.n}),{h:0,c:0,n:0});
+  const line=r=>[r.h.toFixed(2),gbp(r.c),gbp(r.n),r.n?`<span class="${r.c/r.n>0.35?"neg":""}">${pct(r.c/r.n)}</span>`:"–"];
+  const cIn=r=>`<input type="number" step="0.01" value="${num(r.man?r.man.amount:r.c).toFixed(2)}" title="Type the labour cost and press Enter — clear it to go back to the rota figure" style="width:120px;text-align:right${r.man?";font-weight:400;color:var(--ink,#1d2b2a)":";font-weight:400;color:var(--mut)"}" onchange="setLabCost('${esc(r.s)}',this.value)">`;
+  $("tLabSum").innerHTML=table([{t:"Location"},{t:"Hours",n:1},{t:"Labour Cost (£) — Editable",n:1},{t:"Net Sales (excl. VAT)",n:1},{t:"Labour % of Sales",n:1}],
+    rows.map(r=>{const L=line(r);L[1]=cIn(r);return[esc(r.s),...L]}),stores.length>1?["All Locations",...line(T)]:null)+
+    `<p class="hint">Labour cost: dark = typed by you · grey = worked out from the rota. Type a figure and press Enter to save it for these dates; clear the box to go back to the rota figure.</p>`}
+function setLabCost(store,val){const a=$("lStart").value,b=$("lEnd").value;
+  D.labCost=D.labCost.filter(x=>!(x.store===store&&x.from===a&&x.to===b));
+  if(val!=="")D.labCost.push({id:uid(),store,from:a,to:b,amount:num(val),view:$("lView").value});
+  save();toast(val===""?"Back to rota figure":"Labour cost saved");setTimeout(renderLabSum,0)}
+["lStart","lEnd","lStore"].forEach(i=>$(i).onchange=()=>{if($("lEnd").value<$("lStart").value)$("lEnd").value=$("lStart").value;pushPeriod($("lStart").value,$("lEnd").value,$("lStore").value);renderLabSum()});
+function renderRota(){renderLabSum()}
+
+/* ---------- overheads & notes ---------- */
+function renderOv(){pullPeriod("ohStart","ohEnd","ohStore",true);sRender("oh")}
+$("nAdd").onclick=()=>{if(!$("nWeek").value||!$("nText").value.trim())return toast("Week and comment are needed");
+  if(!$("nStore").value)return toast("Pick one location for this note");D.notes.push({id:uid(),week:iso(monday(parse($("nWeek").value))),store:$("nStore").value,text:$("nText").value.trim()});save();$("nText").value="";toast("Note saved");render()};
+$("nStore").onchange=()=>renderNotes();
+function renderNotes(){const ns=$("nStore").value;const rows=[...D.notes].filter(x=>!ns||x.store===ns).sort((a,b)=>b.week.localeCompare(a.week));
+  $("tNotes").innerHTML=table([{t:"Week Of"},{t:"Location"},{t:"Comments"},{t:""}],rows.map(x=>[ukd(x.week),esc(x.store),`<div style="white-space:pre-wrap;max-width:800px">${esc(x.text)}</div>`,`<button class="x" onclick="del('notes','${x.id}')">✕</button>`]))}
+
+function del(k,id){if(!confirm("Delete this entry?"))return;D[k]=D[k].filter(x=>x.id!==id);if(k==="purchases")delFile(id);save();render()}
+
+/* ---------- settings ---------- */
+/* ---------- settings (left menu → panel on the right) ---------- */
+let stCur=(()=>{try{return localStorage.getItem("kpiSt")||"general"}catch(e){return"general"}})();
+function stShow(k){if(!document.querySelector(`.stnav button[data-st="${k}"]`))k="general";stCur=k;try{localStorage.setItem("kpiSt",k)}catch(e){}document.querySelectorAll(".stnav button").forEach(b=>b.classList.toggle("on",b.dataset.st===k));document.querySelectorAll(".stpane").forEach(p=>p.classList.toggle("on",p.dataset.st===k))}
+document.querySelector(".stnav").onclick=e=>{const b=e.target.closest("button[data-st]");if(b){stShow(b.dataset.st);renderSettings()}};
+// two-click confirm on any button (no browser pop-ups)
+function arm(btn,fn,txt){if(btn.dataset.arm==="1"){btn.dataset.arm="";btn.innerHTML=btn.dataset.lbl;btn.classList.remove("arm");return fn()}
+  btn.dataset.lbl=btn.innerHTML;btn.dataset.arm="1";btn.classList.add("arm");btn.innerHTML=txt||"Confirm?";
+  setTimeout(()=>{if(btn.dataset.arm==="1"&&btn.isConnected){btn.dataset.arm="";btn.innerHTML=btn.dataset.lbl;btn.classList.remove("arm")}},4000)}
+const cntStore=st=>["sales","purchases","overheads","rota","labCost"].reduce((a,k)=>a+(D[k]||[]).filter(x=>x.store===st).length,0);
+function renderSettings(){stShow(stCur);if(typeof renderSecurity==="function")renderSecurity();
+  $("stVat").value=D.vat;$("stRate").value=D.rate;
+  $("stStores").innerHTML=table([{t:"Location"},{t:""}],D.stores.map((st,i)=>[`<input value="${esc(st)}" style="width:260px" onchange="renameStore(${i},this.value)">`,`<button class="x" title="Remove" onclick="arm(this,()=>rmStore(${i}),'Remove?')">✕</button>`]));
+  $("stChans").innerHTML=table([{t:"Channel"},{t:"Default VAT %",n:1},{t:""}],D.channels.map((c,i)=>[
+    `<input value="${esc(c.name)}" style="width:200px" onchange="setCh(${i},'name',this.value)">`,
+    `<input type="number" step="0.1" value="${chVat(c.name)}" style="width:90px;text-align:right" onchange="D.channels[${i}].vat=this.value===''?'':num(this.value);save();toast('Default VAT saved')">`,
+    `<button class="x" title="Remove" onclick="arm(this,()=>rmCh(${i}),'Remove?')">✕</button>`]));
+  $("stSup").innerHTML=itemTable("wk",false);$("stCat").innerHTML=itemTable("oh",false);
+  $("stNewSupCode").placeholder="Auto: "+nextCode("wk");$("stNewCatCode").placeholder="Auto: "+nextCode("oh");
+  $("stStaff").innerHTML=table([{t:"Name"},{t:"Home Location"},{t:"£/hr (Blank = Default)",n:1},{t:""}],D.staff.map((x,i)=>[
+    `<input value="${esc(x.name)}" style="width:200px" onchange="renameStaff(${i},this.value)">`,
+    `<select onchange="setStaff(${i},'store',this.value)"><option value="">—</option>${D.stores.map(t=>`<option ${t===x.store?"selected":""}>${esc(t)}</option>`).join("")}</select>`,
+    `<input type="number" step="0.01" value="${x.rate===""||x.rate==null?"":num(x.rate).toFixed(2)}" placeholder="${num(D.rate).toFixed(2)}" style="width:100px;text-align:right" onchange="setStaff(${i},'rate',this.value)">`,
+    `<button class="x" title="Remove" onclick="arm(this,()=>rmStaff(${i}),'Remove?')">✕</button>`]));
+  opts($("stNewStaffStore"),D.stores,"Home location");
+  const LC=[...D.labCost].sort((a,b)=>b.from.localeCompare(a.from)||a.store.localeCompare(b.store));
+  $("stLab").innerHTML=table([{t:"Location"},{t:"Start Date"},{t:"End Date"},{t:"Labour Cost (£)",n:1},{t:""}],LC.map(x=>[esc(x.store),ukd(x.from),ukd(x.to),
+    `<input type="number" step="0.01" value="${num(x.amount).toFixed(2)}" style="width:120px;text-align:right" onchange="setLab('${x.id}',this.value)">`,`<button class="x" title="Remove" onclick="arm(this,()=>rmLab('${x.id}'),'Remove?')">✕</button>`]));
+  const K=[["sales","Sales","date"],["purchases","COGS","date"],["overheads","Overheads","date"],["labCost","Labour cost entries","from"],["rota","Rota shifts","week"]];
+  $("stCounts").innerHTML=table([{t:"Type"},{t:"Entries",n:1},{t:"Earliest"},{t:"Latest"}],K.map(([k,l,f])=>{const ds=(D[k]||[]).map(x=>x[f]).filter(Boolean).sort();return[l,(D[k]||[]).length.toLocaleString("en-GB"),ds.length?ukd(ds[0]):"—",ds.length?ukd(ds[ds.length-1]):"—"]}));
+  const rv=$("rcStore").value;opts($("rcStore"),D.stores,"All Locations");$("rcStore").value=D.stores.includes(rv)?rv:"";
+  if(!$("rcStart").value){$("rcStart").value=$("fStart").value;$("rcEnd").value=$("fEnd").value}rcCount();
+  $("demoState").innerHTML=hasDemo()?"<b>Demo figures are loaded.</b>":"No demo figures loaded.";$("bkSample").disabled=hasDemo();$("dmRemove").disabled=!hasDemo()}
+function renameStore(i,v){v=(v||"").trim();const old=D.stores[i];if(!v||v===old)return renderSettings();if(D.stores.some((x,j)=>j!==i&&x.toLowerCase()===v.toLowerCase())){toast("That location already exists");return renderSettings()}
+  D.stores[i]=v;["sales","purchases","overheads","rota","notes","labCost","staff"].forEach(k=>(D[k]||[]).forEach(x=>{if(x.store===old)x.store=v}));if(D.prefs&&D.prefs.store===old)D.prefs.store=v;
+  if(idb){const tx=idb.transaction("files","readwrite"),os=tx.objectStore("files");os.openCursor().onsuccess=e=>{const cu=e.target.result;if(!cu)return;const q=String(cu.key).split("|");if(q[1]===old){q[1]=v;os.put(cu.value,q.join("|"));cu.delete()}cu.continue()}}
+  ["fStore","sStore","wkStore","ohStore","lStore","nStore","rcStore"].forEach(id=>{const e=$(id);if(e&&e.value===old){opts(e,D.stores,"All Locations");e.value=v}});
+  save();toast(old+" renamed to "+v);render()}
+function rmStore(i){const st=D.stores[i];if(D.stores.length<=1)return toast("Keep at least one location");D.stores.splice(i,1);save();const n=cntStore(st);toast(st+" removed"+(n?" — its "+n+" saved entries stay in the totals for All Locations":"")+" · ⌘Z to undo");render()}
+function rmCh(i){const c=D.channels[i];if(D.channels.length<=1)return toast("Keep at least one channel");D.channels.splice(i,1);save();toast(c.name+" removed · ⌘Z to undo");render()}
+function setCh(i,k,v){const old=D.channels[i].name;if(k==="name"){v=v.trim();if(!v)return render();if(D.channels.some((c,j)=>j!==i&&c.name.toLowerCase()===v.toLowerCase())){toast("That channel already exists");return render()}D.sales.forEach(x=>{if(x.channel===old)x.channel=v})}D.channels[i][k]=k==="comm"?num(v):v;save();toast("Channel updated");render()}
+function setStaff(i,k,v){D.staff[i][k]=v;save();toast("Staff updated")}
+function renameStaff(i,v){v=(v||"").trim();const old=D.staff[i].name;if(!v||v===old)return renderSettings();D.staff[i].name=v;(D.rota||[]).forEach(x=>{if(x.staff===old)x.staff=v});save();toast("Staff renamed");render()}
+function rmStaff(i){const n=D.staff[i].name;D.staff.splice(i,1);save();toast(n+" removed · ⌘Z to undo");render()}
+function setLab(id,v){const x=D.labCost.find(r=>r.id===id);if(!x)return;if(v===""){return rmLab(id)}x.amount=num(v);save();toast("Labour cost updated");render()}
+function rmLab(id){D.labCost=D.labCost.filter(r=>r.id!==id);save();toast("Labour cost entry removed · ⌘Z to undo");render()}
+function rcMatch(k,x){const a=$("rcStart").value,b=$("rcEnd").value,st=$("rcStore").value,d=k==="labCost"?x.from:x.date,e=k==="labCost"?x.to:(x.end||x.date);return(!st||x.store===st)&&(!a||e>=a)&&(!b||d<=b)}
+function rcKinds(){const t=$("rcType").value;return t==="all"?["sales","purchases","overheads","labCost"]:[t]}
+function rcCount(){const n=rcKinds().reduce((a,k)=>a+(D[k]||[]).filter(x=>rcMatch(k,x)).length,0);$("rcInfo").innerHTML=`<b>${n.toLocaleString("en-GB")}</b> entr${n===1?"y":"ies"} match — ${$("rcStore").value||"All Locations"}, ${ukd($("rcStart").value)||"start"} to ${ukd($("rcEnd").value)||"end"}`;$("rcGo").disabled=!n;return n}
+["rcType","rcStore","rcStart","rcEnd"].forEach(id=>$(id).onchange=rcCount);
+$("rcGo").onclick=function(){if(!rcCount())return;arm(this,()=>{let n=0;rcKinds().forEach(k=>{const L=D[k]||[];D[k]=L.filter(x=>!rcMatch(k,x));n+=L.length-D[k].length});save();toast(n+" entries cleared · ⌘Z to undo");render()},"Click again to clear")};
+$("stVat").onchange=e=>{D.vat=num(e.target.value);save();toast("VAT rate saved")};$("stRate").onchange=e=>{D.rate=num(e.target.value);save();toast("Default hourly rate saved")};
+$("stAddStore").onclick=()=>{const v=$("stNewStore").value.trim();if(!v)return toast("Type a location name");if(D.stores.some(x=>x.toLowerCase()===v.toLowerCase()))return toast("That location already exists");D.stores.push(v);save();$("stNewStore").value="";toast(v+" added");render()};
+$("stAddChan").onclick=()=>{const v=$("stNewChan").value.trim();if(!v)return toast("Type a channel name");if(D.channels.some(c=>c.name.toLowerCase()===v.toLowerCase()))return toast("That channel already exists");
+  D.channels.push({name:v,comm:0,vat:$("stNewChanVat").value===""?"":num($("stNewChanVat").value)});save();$("stNewChan").value="";$("stNewChanVat").value="";toast(v+" added");render()};
+$("stAddStaff").onclick=()=>{const v=$("stNewStaff").value.trim();if(!v)return toast("Type a name");D.staff.push({name:v,store:$("stNewStaffStore").value,rate:$("stNewStaffRate").value});save();$("stNewStaff").value="";$("stNewStaffRate").value="";toast(v+" added");render()};
+$("stAddSup").onclick=()=>{if(addItem("wk",$("stNewSup").value,$("stNewSupCode").value)){$("stNewSup").value="";$("stNewSupCode").value="";render()}};
+$("stAddCat").onclick=()=>{if(addItem("oh",$("stNewCat").value,$("stNewCatCode").value)){$("stNewCat").value="";$("stNewCatCode").value="";render()}};
+[["stNewStore","stAddStore"],["stNewChan","stAddChan"],["stNewStaff","stAddStaff"],["stNewSup","stAddSup"],["stNewCat","stAddCat"]].forEach(([i,b])=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")$(b).click()}));
+
+/* backup */
+function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+$("bkExport").onclick=()=>download("KPI-backup-"+today()+".json",JSON.stringify(D,null,1),"application/json");
+$("bkImport").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.sales||!x.stores)throw 0;
+  const bp=$("bkPending");bp.style.display="";bp.innerHTML=`<span>Replace <b>all</b> current data with <b>${esc(f.name)}</b> (${x.sales.length} sales entries)?</span><button class="b dz" id="bkYes">Replace My Data</button><button class="b g" id="bkNo">Cancel</button>`;
+  $("bkNo").onclick=()=>{bp.style.display="none"};$("bkYes").onclick=()=>{D=Object.assign(defaults(),x);fixD();if(!D.labCost)D.labCost=[];if(!D.prefs)D.prefs={period:"thisweek",store:""};save();bp.style.display="none";render();toast("Backup restored · ⌘Z to undo")}}
+  catch(err){toast("That isn't a valid backup file")}};r.readAsText(f);e.target.value=""};
+$("bkReset").onclick=function(){arm(this,()=>{D=defaults();fixD();D.labCost=[];D.prefs={period:"thisweek",store:""};D.demoSeeded=true;save();showDemoBadge();render();toast("Everything erased · ⌘Z to undo")},"Click again to erase everything")};
+/* ---------- demo figures (Sep–Nov 2026) — every item is tagged demo:true so it can be removed in one go ---------- */
+function seedDemo(){
+  let seed=20261106;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const vary=(v,p)=>r2(v*(1-p+rnd()*2*p)),pick=a=>a[Math.floor(rnd()*a.length)];
+  const S=D.stores.slice(0,3),CH=D.channels.map(c=>c.name),SUP=D.suppliers.slice(0,8).map(x=>x.name),OC=D.ohcats.map(x=>x.name);
+  const cat=(want,i)=>OC.find(n=>n.toLowerCase().startsWith(want.toLowerCase()))||OC[i]||want;
+  const base=[[1150,420,360,300],[880,330,300,240],[960,360,320,260]],dayF=[1.12,.82,.86,.92,1,1.28,1.38]; // Sun..Sat
+  const rent=[2400,1850,2000],rates=[450,380,410],labM={"2026-09":[5200,4100,4500]};
+  const start=parse("2026-09-01"),end=parse("2026-11-30");
+  const staffBy=S.map((_,i)=>D.staff.filter((_,j)=>j%3===i).slice(0,4).map(x=>x.name));
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){const k=iso(d),dow=d.getDay(),dom=d.getDate();
+    S.forEach((st,si)=>{let dayNet=0;
+      CH.forEach((ch,ci)=>{const g=vary((base[si][ci]||250)*dayF[dow],.12),n=r2(g/1.2);dayNet+=n;
+        D.sales.push({id:uid(),date:k,end:k,store:st,channel:ch,gross:g,net:n,notes:"",demo:true})});
+      // COGS: 1–2 supplier deliveries a day, about 30% of net sales
+      const nDel=rnd()<.55?1:2;for(let q=0;q<nDel;q++)D.purchases.push({id:uid(),date:k,end:k,store:st,supplier:pick(SUP),inv:"",amount:vary(dayNet*.30/nDel,.15),paid:"No",notes:"Supplier sheet",file:"",src:"week",demo:true});
+      // Overheads
+      const oh=(c,amt)=>D.overheads.push({id:uid(),date:k,end:k,store:st,cat:c,desc:"Overheads sheet",amount:r2(amt),src:"sheet",demo:true});
+      if(dom===1){oh(cat("Rent",0),rent[si]);oh(cat("Business",3),rates[si])}
+      if(dom===3)oh(cat("Software",8),69);
+      if(dom===5)oh(cat("Insurance",4),vary(140,.05));
+      if(dom===15)oh(cat("Water",2),vary(100,.2));
+      if(dom===20)oh(cat("Marketing",7),vary(220,.35));
+      if(dow===1)oh(cat("Electricity",1),vary(250,.15));
+      if(dow===4)oh(cat("Cleaning",6),vary(75,.2));
+      if(dow===0)oh(cat("Bank",9),dayNet*7*.012);
+      if(dow===3&&Math.floor(dom/7)%2===0)oh(cat("Waste",10),45);
+      if(rnd()<.03)oh(cat("Repairs",5),vary(160,.5));
+    });
+    // Rota: one row per staff member per week (Monday)
+    if(dow===1)S.forEach((st,si)=>staffBy[si].forEach((nm,ni)=>{const off=(ni+si)%7;
+      D.rota.push({id:uid(),week:k,store:st,staff:nm,days:DAYS.map((_,i)=>i===off?"Day off":String(Math.round((6+rnd()*4)*2)/2)),notes:"",demo:true})}));
+    if(dow===1)S.forEach((st,si)=>{if(rnd()<.6)D.notes.push({id:uid(),week:k,store:st,text:pick(["Busy Friday night — ran low on wings by 9pm.","Fryer serviced on Wednesday.","Uber Eats promo boosted Saturday orders.","Two staff off sick midweek, covered by Durham.","New menu boards installed.","Deliveroo tablet replaced.","Strong lunch trade after leaflet drop.","Freezer temperature alarm — engineer booked."]),demo:true})});
+  }
+  Object.entries(labM).forEach(([m,v])=>S.forEach((st,si)=>D.labCost.push({id:uid(),store:st,from:m+"-01",to:monthEnd(m+"-01"),amount:v[si],view:"m",demo:true})));
+  S.forEach((st,si)=>staffBy[si].forEach((nm,ni)=>{const x=D.staff.find(z=>z.name===nm);if(x&&!x.store){x.store=st;if(x.rate===""||x.rate==null)x.rate=String([12.71,13.10,13.50,14.25][ni%4])}}));
+  D.demoSeeded=1;save();showDemoBadge()}
+function hasDemo(){return["sales","purchases","overheads","rota","notes","labCost"].some(k=>(D[k]||[]).some(x=>x.demo))}
+function showDemoBadge(){const b=document.getElementById("demoStar");if(!b)return;const on=hasDemo();b.classList.toggle("on",on);b.querySelector(".dsi").textContent=on?"★":"☆";b.title=on?"Demo figures ON — click to remove them":"Demo figures OFF — click to load sample figures";if(typeof renderSettings==="function"&&$("settings").classList.contains("on"))renderSettings()}
+function removeDemo(btn){if(btn&&btn.dataset.arm!=="1")return arm(btn,()=>removeDemo(),"Remove?");
+  ["sales","purchases","overheads","rota","notes","labCost"].forEach(k=>D[k]=(D[k]||[]).filter(x=>!x.demo));save();showDemoBadge();render();toast("Demo figures removed")}
+$("dmRemove").onclick=function(){removeDemo(this)};
+$("bkSample").onclick=()=>{if(hasDemo())return toast("Demo figures are already loaded");seedDemo();showDemoBadge();render();toast("Demo figures loaded (Sep–Nov 2026)")};
+/* CSV export */
+function csv(k){const map={
+  sales:[["Start date","End date","Location","Channel","Gross","Net (excl. VAT)","VAT %","VAT £","Notes"],x=>{const g=num(x.gross),n=rnet(x);return[ukd(x.date),ukd(x.end||x.date),x.store,x.channel,g,n,rvatShow(x),rvat(x).toFixed(2),x.notes]}],
+  purchases:[["Start date","End date","Location","Supplier","Invoice","Amount (excl. VAT)","Paid","Notes"],x=>[ukd(x.date),ukd(x.end||x.date),x.store,x.supplier,x.inv,x.amount,x.paid,x.notes]],
+  rota:[["Week","Location","Staff",...DAYS,"Hours","Rate","Cost","Notes"],x=>{const h=hrs(x),r=staffRate(x.staff);return[ukd(x.week),x.store,x.staff,...x.days,h,r,(h*r).toFixed(2),x.notes]}],
+  overheads:[["Date","Location","Category","Description","Amount (excl. VAT)"],x=>[ukd(x.date),x.store,x.cat,x.desc,x.amount]]}[k];
+  const q=v=>{v=String(v??"");return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const list=k==="sales"?salesView().sort((a,b)=>a.date.localeCompare(b.date)):D[k];
+  download(k==="sales"?`sales_${$("sStore").value}_${$("sDate").value}_to_${$("sEnd").value||$("sDate").value}.csv`:k+"-"+today()+".csv","﻿"+[map[0],...list.map(map[1])].map(r=>r.map(q).join(",")).join("\n"),"text/csv")}
+
+/* ---------- render ---------- */
+function fillSelects(){
+  const sts=D.stores;["sStore","wkStore","ohStore","nStore"].forEach(i=>{const v=$(i).value,had=$(i).options.length>0;opts($(i),sts,"All Locations");$(i).value=sts.includes(v)?v:(had&&v===""?"":(sts[0]||""))});
+  const fv=$("fStore").value;opts($("fStore"),sts,"All Locations");const lv=$("lStore").value;opts($("lStore"),sts,"All Locations");$("lStore").value=sts.includes(lv)?lv:"";$("fStore").value=sts.includes(fv)?fv:"";
+  ["wk","oh"].forEach(p=>{const L=SH[p].list(),v=$(p+"Sel").value;opts($(p+"Sel"),L.map(x=>x.name),SH[p].all);$(p+"Sel").value=L.some(x=>x.name===v)?v:""})}
+function render(){fillSelects();const on=document.querySelector("section.on");if(!on)return;
+  ({dashboard:renderDash,sales:renderSales,purchases:renderPur,rota:renderRota,overheads:renderOv,notes:renderNotes,settings:renderSettings})[on.id]()}
+["sDate","sEnd"].forEach(i=>$(i).value=today());["nWeek"].forEach(i=>$(i).value=iso(monday(new Date())));
+window.addEventListener("resize",()=>{if($("dashboard").classList.contains("on"))renderDash()});
+if(!D.demoSeeded)seedDemo();showDemoBadge();
+fillSelects();if(D.prefs.store&&D.stores.includes(D.prefs.store))$("fStore").value=D.prefs.store;setPeriod(D.prefs.period||"thisweek");go("dashboard");
+
+/* ----- one small Save key, bottom right, works on every page ----- */
+function curPage(){const o=document.querySelector("section.on");return o?o.id:""}
+function pagePending(){const pg=curPage();
+  if(pg==="sales")return sPending()>0;
+  if(pg==="purchases"||pg==="overheads"){const p=pg==="purchases"?"wk":"oh";return [...document.querySelectorAll("#"+p+"Grid input[data-o]")].some(el=>!el.readOnly&&r2(num(el.value))!==r2(num(el.dataset.o)))}
+  if(pg==="notes")return !!($("nText")&&$("nText").value.trim());
+  return false}
+function fabState(){const d=pagePending();$("fabSave").classList.toggle("dirty",d);$("fabSave").title=d?"Unsaved changes — click to save (⌘S)":"Save (⌘S / Ctrl+S)"}
+function pickLoc(id){toast("Pick one location to save figures");const sel=$(id);if(sel){sel.focus();sel.classList.add("pulse");setTimeout(()=>sel.classList.remove("pulse"),1600)}}
+function saveNow(){const a=document.activeElement;if(a&&a.blur&&a!==document.body)a.blur(); // commits any box still being typed in
+  setTimeout(()=>{const pg=curPage();
+    if(pg==="sales"){if(!$("sStore").value)pickLoc("sStore");else $("sSaveAll").onclick()}
+    else if(pg==="purchases"){if(!$("wkStore").value)pickLoc("wkStore");else sSave("wk")}
+    else if(pg==="overheads"){if(!$("ohStore").value)pickLoc("ohStore");else sSave("oh")}
+    else if(pg==="notes"){if($("nText").value.trim())$("nAdd").click();else toast("Nothing to save — type a note first")}
+    else{save();toast("All changes saved")}
+    setTimeout(fabState,80)},0)}
+$("fabSave").onclick=saveNow;
+document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&e.key.toLowerCase()==="s"){e.preventDefault();saveNow()}});
+document.addEventListener("input",()=>setTimeout(fabState,0));
+document.addEventListener("click",e=>{if(e.target.closest("#nav"))setTimeout(fabState,80)});
+
+/* ----- Export menu on every page: CSV / Excel / Print ----- */
+const xTxt=el=>[...el.childNodes].map(n=>n.nodeType===3?n.textContent:xTxt(n)).join(" ").replace(/\s+/g," ").trim();
+function xNum(t){t=String(t??"").replace(/\s+/g," ").trim();if(t==="—"||t==="–")return"";
+  const m=t.match(/^([−-])?\s*£\s*([\d,]+(?:\.\d+)?)$/);if(m)return(m[1]?-1:1)*parseFloat(m[2].replace(/,/g,""));
+  if(/^-?[\d,]+\.\d+$/.test(t)||/^-?\d+$/.test(t))return parseFloat(t.replace(/,/g,""));return t}
+function xCell(td){const i=td.querySelector("input,select");if(i)return i.value===""?"":(i.type==="number"?num(i.value):i.value);
+  if(td.querySelector("button")&&!td.textContent.replace(/[✕×]/g,"").trim())return"";return xNum(xTxt(td))}
+function readTable(tbl,name){if(!tbl)return null;const hr=tbl.querySelector("thead tr");if(!hr)return null;
+  const head=[...hr.children].map(th=>xTxt(th));const keep=head.map(h=>h!=="");
+  const rows=[],tot=[];const add=tr=>{if(tr.children.length<2)return;rows.push([...tr.children].map(xCell).filter((_,i)=>keep[i]!==false));tot.push(tr.classList.contains("tot")||tr.classList.contains("sdfrz"))};
+  [...tbl.querySelectorAll("thead tr")].slice(1).forEach(add);tbl.querySelectorAll("tbody tr").forEach(add);
+  return{name,head:head.filter((_,i)=>keep[i]),rows,tot}}
+const per=(a,b)=>a?(ukd(a)+(b&&b!==a?" to "+ukd(b):"")):"";
+function pageData(pg){const L=v=>v||"All Locations";let title,secs=[];
+  if(pg==="dashboard"){renderDash();title=`Dashboard — ${L($("fStore").value)} — ${per($("fStart").value,$("fEnd").value)}`;
+    secs.push(readTable(document.querySelector("#kpis table"),"Gross Total"));
+    document.querySelectorAll("#dashboard details.acc").forEach(d=>secs.push(readTable(d.querySelector(".vtable table"),d.querySelector(".acct").textContent)))}
+  else if(pg==="sales"){title=`Sales — ${L($("sStore").value)} — ${per($("sDate").value,$("sEnd").value)}`;
+    const rows=[],tot=[];let G=0,N=0,V=0;D.channels.forEach((c,i)=>{const g=num($("sc"+i).value),n=num($("sn"+i).value),v=num($("sv"+i).value);G+=g;N+=n;V+=v;rows.push([c.name,r2(g),r2(n),r2(v),r2(n-v)]);tot.push(false)});
+    rows.push(["Total",r2(G),r2(N),r2(V),r2(N-V)]);tot.push(true);
+    secs.push({name:"Revenue",head:["Channel","Gross £ (incl. VAT)","Net £ (excl. VAT)","VAT £","Total £ (Net − VAT)"],rows,tot});
+    renderSalesDetail();secs.push(readTable(document.querySelector("#sdWrap table"),"Sales Detail ("+({gross:"Gross",net:"Net",vat:"VAT",total:"Total"}[sdMode])+" per channel)"))}
+  else if(pg==="purchases"||pg==="overheads"){const p=pg==="purchases"?"wk":"oh",d=sData(p);title=`${SH[p].title} — ${L($(p+"Store").value)} — ${per($(p+"Start").value,$(p+"End").value)}`;
+    secs.push({name:SH[p].title,head:d.head,rows:d.rows,tot:d.rows.map((_,i)=>i===d.rows.length-1)})}
+  else if(pg==="rota"){title=`Rota & Labour — ${L($("lStore").value)} — ${per($("lStart").value,$("lEnd").value)}`;secs.push(readTable(document.querySelector("#tLabSum table"),"Summary – Labour Cost"))}
+  else if(pg==="notes"){const ns=$("nStore").value;title=`Weekly Notes — ${L(ns)}`;secs.push(readTable(document.querySelector("#tNotes table"),"All Notes"))}
+  secs=secs.filter(x=>x&&x.head.length);const fname=title.replace(/[^\w\-]+/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");return{title,secs,fname}}
+function exportPage(kind){const pg=curPage(),d=pageData(pg);if(!d.secs.length)return toast("Nothing to export on this page");
+  if(kind==="csv"){const q=v=>{v=String(v??"");return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};const out=[[d.title],[]];
+    d.secs.forEach(S=>{out.push([S.name],S.head,...S.rows,[])});download(d.fname+".csv","﻿"+out.map(r=>r.map(q).join(",")).join("\n"),"text/csv");return toast("CSV downloaded")}
+  if(kind==="xlsx"){const a=document.createElement("a");a.href=URL.createObjectURL(xlsx(d.title,[],[],(pg[0].toUpperCase()+pg.slice(1)).slice(0,30),d.secs));a.download=d.fname+".xlsx";document.body.appendChild(a);a.click();a.remove();return toast("Excel file downloaded")}
+  // print: a clean, print-only copy of this page's tables
+  const f=v=>typeof v==="number"?(Number.isInteger(v)&&!/Hours|Code/.test("")?v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}):v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})):esc(v);
+  const money=h=>/£|Gross|Net|VAT|COGS|Overheads|Labour Cost|Profit|Spend|Total|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|In-store|Uber|Just Eat|Deliveroo|\d{2}\/\d{2}/i.test(h)&&!/%|Margin|Mix|Hours/i.test(h);
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(d.title)}</title><style>
+    body{font:12px/1.4 -apple-system,"Segoe UI",Arial,sans-serif;color:#1d2a29;margin:24px;font-variant-numeric:tabular-nums}
+    h1{font-size:18px;margin:0 0 4px;color:#2F5F5C}.sub{color:#6b7a78;font-size:11px;margin-bottom:18px}
+    h2{font-size:13.5px;color:#2F5F5C;margin:18px 0 6px}table{border-collapse:collapse;width:100%;margin-bottom:6px;page-break-inside:auto}
+    th{background:#2F5F5C;color:#fff;text-align:left;padding:6px 8px;font-size:11px}td{padding:5px 8px;border-bottom:1px solid #dde3e2}
+    td.n,th.n{text-align:right}tr.t td{background:#e3efec;font-weight:700}tr{page-break-inside:avoid}@page{margin:14mm}</style></head><body>
+    <h1>${esc(d.title)}</h1><div class="sub">KPI Tracker · printed ${ukd(today())}</div>
+    ${d.secs.map(S=>`<h2>${esc(S.name)}</h2><table><thead><tr>${S.head.map((h,i)=>`<th class="${i&&S.rows.some(r=>typeof r[i]==="number"||/%$/.test(r[i]))?"n":""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${S.rows.map((r,j)=>`<tr class="${S.tot[j]?"t":""}">${r.map((v,i)=>`<td class="${typeof v==="number"||/%$/.test(v)?"n":""}">${typeof v==="number"?(money(S.head[i])?(v<0?"−£":"£")+Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}):v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})):esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`).join("")}</body></html>`;
+  let fr=$("printFrame");if(fr)fr.remove();fr=document.createElement("iframe");fr.id="printFrame";fr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";document.body.appendChild(fr);
+  fr.srcdoc=html;fr.onload=()=>{try{fr.contentWindow.focus();fr.contentWindow.print()}catch(e){toast("Printing isn't available here")}}}
+// one Export button per page, at the right of the page's first control row
+(function(){const pages=["dashboard","sales","purchases","overheads","rota","notes"];
+  pages.forEach(pg=>{const sec=$(pg);if(!sec)return;const row=sec.querySelector(".card .row");if(!row)return;
+    const w=document.createElement("div");w.className="xwrap noprint";w.innerHTML=`<button class="b g sm xbtn" type="button">Export <span class="xcar">▾</span></button>`;row.appendChild(w)});
+  const m=document.createElement("div");m.id="xMenu";m.innerHTML=`<button data-x="csv"><b>CSV</b><small>Opens in Numbers or Excel</small></button><button data-x="xlsx"><b>Excel</b><small>.xlsx spreadsheet</small></button><button data-x="print"><b>Print</b><small>Print or save as PDF</small></button>`;document.body.appendChild(m);
+  document.addEventListener("click",e=>{const b=e.target.closest(".xbtn");if(b){const r=b.getBoundingClientRect();m.style.top=(r.bottom+6)+"px";m.style.left=Math.max(8,Math.min(r.right-200,innerWidth-208))+"px";m.classList.toggle("on");return}
+    const it=e.target.closest("#xMenu button");m.classList.remove("on");if(it)exportPage(it.dataset.x)});
+  window.addEventListener("scroll",()=>m.classList.remove("on"),{passive:true})})();
+
+/* show every £ in a lighter tone (text only, not charts or input boxes) */
+(function(){const skip=n=>{const p=n.parentElement;return!p||p.tagName==="LABEL"||p.closest("svg,script,style,textarea,input,option,select,.gbp,title")};
+  function fade(root){const w=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>/£\d/.test(n.nodeValue)&&!skip(n)?1:3});const L=[];while(w.nextNode())L.push(w.currentNode);
+    L.forEach(n=>{const parts=n.nodeValue.split(/£(?=\d)/);if(parts.length<2)return;const f=document.createDocumentFragment();
+      parts.forEach((t,i)=>{if(i){const sp=document.createElement("span");sp.className="gbp";sp.textContent="£";f.appendChild(sp)}if(t)f.appendChild(document.createTextNode(t))});n.replaceWith(f)})}
+  let q=false;const mo=new MutationObserver(()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;mo.disconnect();fade();mo.observe(document.body,{childList:true,subtree:true,characterData:true})})});
+  fade();mo.observe(document.body,{childList:true,subtree:true,characterData:true})})();
+
+/* privacy: hide every figure with one click (remembered on this device) */
+function setPriv(on){document.body.classList.toggle("priv",on);setTimeout(privSvg,0);$("privBtn").classList.toggle("on",on);$("privBtn").querySelector(".plbl").textContent=on?"Show values":"Hide values";$("privBtn").title=on?"Show all values":"Hide all values (privacy)";try{localStorage.setItem("kpiPriv",on?"1":"")}catch(e){}}
+$("privBtn").onclick=()=>{setPriv(!document.body.classList.contains("priv"));toast(document.body.classList.contains("priv")?"Values hidden":"Values shown")};
+try{if(localStorage.getItem("kpiPriv")==="1")setPriv(true)}catch(e){}
+
+/* privacy: numbers inside charts become ***** too */
+function privSvg(){const on=document.body.classList.contains("priv");if(on)document.querySelectorAll("input[type=number]:not([placeholder])").forEach(i=>i.placeholder=" ");document.querySelectorAll("svg text").forEach(t=>{if(on){if(t.dataset.po===undefined&&/[£\d]/.test(t.textContent)){t.dataset.po=t.textContent;t.textContent="*****"}}else if(t.dataset.po!==undefined){t.textContent=t.dataset.po;delete t.dataset.po}})}
+new MutationObserver(()=>{if(document.body.classList.contains("priv"))requestAnimationFrame(privSvg)}).observe(document.body,{childList:true,subtree:true});
+
+/* ---------- login: several users, each with their own email + password (privacy lock, works offline) ---------- */
+const AUTHK="kpiAuth";let AUTHMEM=null,SESSMEM="";
+const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
+function getStore(){let a=null;try{const v=localStorage.getItem(AUTHK);if(v)a=JSON.parse(v)}catch(e){}a=a||AUTHMEM;if(!a)return null;
+  if(!a.users){a={idle:a.idle==null?15:a.idle,users:[{id:"u1",name:a.name||"",user:a.user,salt:a.salt,hash:a.hash,created:a.created||"",last:a.last||"",prev:a.prev||"",role:"Admin"}]}} // older single login
+  return a.users.length?a:null}
+function putStore(a){AUTHMEM=a;try{if(a)localStorage.setItem(AUTHK,JSON.stringify(a));else localStorage.removeItem(AUTHK)}catch(e){}}
+const sessId=()=>{let v="";try{v=sessionStorage.getItem("kpiIn")||""}catch(e){}return v||SESSMEM};
+const setSess=id=>{SESSMEM=id||"";try{if(id)sessionStorage.setItem("kpiIn",id);else sessionStorage.removeItem("kpiIn")}catch(e){}};
+const curUser=()=>{const a=getStore();return a?a.users.find(u=>u.id===sessId())||null:null};
+const getAuth=()=>{const a=getStore(),u=curUser();return u?Object.assign({},u,{idle:a.idle}):null}; // used by older code
+async function hashPw(pw,salt){const t=salt+"|"+pw;
+  try{if(crypto&&crypto.subtle){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}}catch(e){}
+  let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return"f"+(h2>>>0).toString(16)+(h1>>>0).toString(16)}
+const newSalt=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
+const initials=u=>{const n=(u&&(u.name||u.user)||"?").trim();const p=n.split(/[\s@._-]+/).filter(Boolean);return((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase()};
+async function makeUser(name,email,pw,pw2,errEl){const err=t=>{errEl.textContent=t;return null};const a=getStore();
+  if(!name.trim())return err("Enter a name");if(!emailOk(email))return err("Enter a valid email address");
+  if(a&&a.users.some(u=>u.user.trim().toLowerCase()===email.trim().toLowerCase()))return err("That email already has a login");
+  if(pw.length<4)return err("Password needs at least 4 characters");if(pw!==pw2)return err("The two passwords don't match");
+  const salt=newSalt();return{id:"u"+Date.now().toString(36),name:name.trim(),user:email.trim(),salt,hash:await hashPw(pw,salt),created:new Date().toISOString(),last:"",prev:"",role:a?"User":"Admin"}}
+let lgMode="login";
+function lgShow(){const a=getStore();lgMode=a?"login":"setup";document.body.classList.add("locked");closeProf();$("auModal").classList.remove("on");
+  $("lgSub").classList.remove("ok");$("lgSub").textContent=a?"Sign in with your email and password":"Create your login to protect your figures";
+  $("lgNameRow").style.display=a?"none":"";$("lgPass2Row").style.display=a?"none":"";$("lgGo").textContent=a?"Sign In":"Create Login";
+  $("lgForgot").style.display=a?"":"none";$("lgForgotBox").style.display="none";$("lgForm").style.display="";
+  $("lgErr").textContent="";$("lgPass").value="";$("lgPass2").value="";setTimeout(()=>(a?($("lgUser").value?$("lgPass"):$("lgUser")):$("lgName")).focus(),50)}
+function lgOpen(id){setSess(id);document.body.classList.remove("locked");lastAct=Date.now();profPaint();render()}
+async function lgSubmit(){const u=$("lgUser").value.trim(),pw=$("lgPass").value,err=t=>{$("lgErr").textContent=t};
+  if(lgMode==="setup"){const nu=await makeUser($("lgName").value,u,pw,$("lgPass2").value,$("lgErr"));if(!nu)return;
+    putStore({idle:15,users:[nu]});lgShow();$("lgUser").value=u;$("lgSub").textContent="Login created ✓ — now sign in with your email and password";$("lgSub").classList.add("ok");$("lgPass").focus();return}
+  const a=getStore();if(!a)return lgShow();const m=a.users.find(x=>x.user.trim().toLowerCase()===u.toLowerCase());
+  if(!m||await hashPw(pw,m.salt)!==m.hash){$("lgPass").value="";return err("Email or password is not right")}
+  m.prev=m.last;m.last=new Date().toISOString();putStore(a);lgOpen(m.id);toast("Welcome"+(m.name?", "+m.name:""))}
+$("lgGo").onclick=()=>lgSubmit().catch(()=>{$("lgErr").textContent="Something went wrong — please try again"});
+["lgName","lgUser","lgPass","lgPass2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("lgGo").click()}}));
+$("lgEye").onclick=()=>{const i=$("lgPass"),on=i.type==="password";i.type=on?"text":"password";$("lgPass2").type=i.type;$("lgEye").textContent=on?"Hide":"Show"};
+$("lgForgot").onclick=()=>{$("lgForm").style.display="none";$("lgForgot").style.display="none";$("lgForgotBox").style.display="";$("lgReset").value="";$("lgReset").focus()};
+$("lgResetNo").onclick=lgShow;$("lgReset").addEventListener("keydown",e=>{if(e.key==="Enter")$("lgResetGo").click()});
+$("lgResetGo").onclick=()=>{if($("lgReset").value.trim().toUpperCase()!=="RESET")return toast("Type RESET to confirm");putStore(null);setSess("");toast("Logins reset — create a new one");lgShow()};
+// profile menu (top right)
+function profPaint(){const u=curUser();$("pAv").textContent=$("pAv2").textContent=initials(u);$("pNm").textContent=u?(u.name||u.user):"Profile";$("pNm2").textContent=u?(u.name||"—"):"";$("pEm2").textContent=u?u.user:""}
+function closeProf(){$("pMenu").classList.remove("on")}
+$("profBtn").onclick=e=>{e.stopPropagation();profPaint();$("pMenu").classList.toggle("on")};
+document.addEventListener("click",e=>{if(!e.target.closest("#prof"))closeProf()});
+$("pOut").onclick=()=>{setSess("");$("lgUser").value="";lgShow();toast("Logged out")};
+const openAdd=()=>{closeProf();["auName","auEmail","auPass","auPass2"].forEach(i=>$(i).value="");$("auErr").textContent="";$("auModal").classList.add("on");setTimeout(()=>$("auName").focus(),50)};
+$("pAdd").onclick=openAdd;$("admAdd").onclick=openAdd;
+$("auX").onclick=$("auCancel").onclick=()=>$("auModal").classList.remove("on");
+$("auGo").onclick=async()=>{const nu=await makeUser($("auName").value,$("auEmail").value,$("auPass").value,$("auPass2").value,$("auErr"));if(!nu)return;
+  const a=getStore();a.users.push(nu);putStore(a);$("auModal").classList.remove("on");toast(nu.name+" added — they can sign in with "+nu.user);if(typeof renderSecurity==="function")renderSecurity()};
+["auName","auEmail","auPass","auPass2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")$("auGo").click()}));
+// automatic lock after no activity
+let lastAct=Date.now();["mousemove","keydown","click","wheel","touchstart"].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now()},{passive:true}));
+setInterval(()=>{const a=getStore();if(!a||document.body.classList.contains("locked"))return;const m=num(a.idle);if(m&&Date.now()-lastAct>m*60000){setSess("");lgShow();toast("Logged out after "+m+" minutes of no activity")}},20000);
+document.addEventListener("keydown",e=>{if(document.body.classList.contains("locked")&&(e.metaKey||e.ctrlKey)&&!["a","c","v","x"].includes(e.key.toLowerCase())){e.stopImmediatePropagation();e.preventDefault()}},true);
+// Settings → Admin
+function renderSecurity(){const a=getStore(),u=curUser();$("scUser").value=u?u.user:"";$("scName").value=u?(u.name||""):"";$("scIdle").value=String(a&&a.idle!=null?a.idle:15);
+  const dt=v=>{if(!v)return"—";const d=new Date(v);return ukd(iso(d))+" at "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})};
+  $("admInfo").innerHTML=u?table([{t:"My Details"},{t:""}],[["Name",esc(u.name||"—")],["Email","<b>"+esc(u.user)+"</b>"],["Password",'<span class="admpw">••••••••</span> <span class="hint" style="display:inline">kept private — change it below</span>'],["Role",esc(u.role||"User")],["Login created",dt(u.created)],["Last sign-in",dt(u.prev||u.last)],["Automatic lock",num(a.idle)?num(a.idle)+" minutes":"Off"]]):'<p class="hint">Not signed in.</p>';
+  $("admUsers").innerHTML=a?table([{t:"Name"},{t:"Email"},{t:"Role"},{t:"Last Sign-in"},{t:""}],a.users.map(x=>[esc(x.name||"—")+(u&&x.id===u.id?' <span class="youtag">You</span>':""),esc(x.user),esc(x.role||"User"),dt(x.last),
+    u&&x.id===u.id?"":`<button class="x" title="Remove user" onclick="arm(this,()=>rmUser('${x.id}'),'Remove?')">✕</button>`])):""}
+function rmUser(id){const a=getStore();if(!a)return;const x=a.users.find(u=>u.id===id);a.users=a.users.filter(u=>u.id!==id);putStore(a);toast((x?x.name||x.user:"User")+" removed");renderSecurity()}
+$("scIdle").onchange=()=>{const a=getStore();if(!a)return;a.idle=+$("scIdle").value;putStore(a);renderSecurity();toast(a.idle?"Logs out after "+a.idle+" minutes of no activity":"Automatic log out off")};
+$("scSave").onclick=async()=>{const a=getStore(),u=a&&a.users.find(x=>x.id===sessId());if(!u)return;if(await hashPw($("scCur").value,u.salt)!==u.hash)return toast("Current password is not right");
+  const em=$("scUser").value.trim(),pw=$("scPass").value;if(!emailOk(em))return toast("Enter a valid email address");
+  if(a.users.some(x=>x.id!==u.id&&x.user.trim().toLowerCase()===em.toLowerCase()))return toast("That email already has a login");
+  if(pw){if(pw.length<4)return toast("Password needs at least 4 characters");if(pw!==$("scPass2").value)return toast("New passwords don't match");u.salt=newSalt();u.hash=await hashPw(pw,u.salt)}
+  u.user=em;u.name=$("scName").value.trim();putStore(a);["scCur","scPass","scPass2"].forEach(i=>$(i).value="");toast("Login saved");renderSecurity();profPaint()};
+// start: signed in for this browser session, otherwise the login page
+(function(){if(curUser()){document.body.classList.remove("locked");profPaint()}else lgShow()})();
+
+/* demo figures: one star in the top bar turns them on / off */
+$("demoStar").onclick=function(){if(hasDemo()){if(this.dataset.arm!=="1"){this.dataset.arm="1";this.classList.add("arm");toast("Click the star again to remove the demo figures");setTimeout(()=>{this.dataset.arm="";this.classList.remove("arm")},4000);return}
+  this.dataset.arm="";this.classList.remove("arm");["sales","purchases","overheads","rota","notes","labCost"].forEach(k=>D[k]=(D[k]||[]).filter(x=>!x.demo));save();showDemoBadge();render();toast("Demo figures removed · ⌘Z to undo")}
+  else{seedDemo();save();showDemoBadge();render();toast("Demo figures loaded (Sep–Nov 2026)")}};
+showDemoBadge();
+</script>
+</body>
+</html>
